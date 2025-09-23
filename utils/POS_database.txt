@@ -1,0 +1,147 @@
+--🛎️ Service Area Table
+CREATE TABLE IF NOT EXISTS Service_Area(
+    service_area_id INTEGER PRIMARY KEY, 
+    description TEXT,
+    status INTEGER DEFAULT 0,
+    timestamp DATETIME 
+);
+
+-- 🗂️ Product Group Table
+CREATE TABLE IF NOT EXISTS Product_Group (
+    product_group_id INTEGER PRIMARY KEY,
+    description TEXT NOT NULL
+);
+
+-- 📦 Product Option Table
+CREATE TABLE IF NOT EXISTS Product_Option (
+    product_id INTEGER,
+    option TEXT NOT NULL, 
+    FOREIGN KEY (product_id) REFERENCES  
+Product_Item(product_id)
+);
+
+-- 🥪 Product Item Table
+CREATE TABLE IF NOT EXISTS Product_Item (
+    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    description TEXT NOT NULL,
+    product_group_id INTEGER,
+    price INTEGER NOT NULL,
+    tax INTEGER NOT NULL,
+    FOREIGN KEY (product_group_id) REFERENCES Product_Group(product_group_id)
+);
+
+-- 👤 Customer Table
+CREATE TABLE IF NOT EXISTS Customer (
+    customer_id INTEGER PRIMARY KEY, -- phone number as unique int
+    point INTEGER DEFAULT 0
+);
+
+-- 🧾 Order_Cart Table
+CREATE TABLE IF NOT EXISTS Order_Cart (
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_status INTEGER NOT NULL DEFAULT 0,
+    service_area_id INTEGER NOT NULL,
+    customer_id INTEGER,
+    subtotal INTEGER NOT NULL DEFAULT 0,
+    charged INTEGER NOT NULL DEFAULT 0,
+    special_request TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (service_area_id) REFERENCES Service_Area(service_area_id),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id)
+);
+
+-- 📜 Order History Table
+CREATE TABLE IF NOT EXISTS  Order_History (
+    order_id INTEGER,
+    order_status INTEGER,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+); 
+
+
+CREATE TRIGGER IF NOT EXISTS log_order_insert
+AFTER INSERT ON Order_Cart
+FOR EACH ROW
+BEGIN
+    INSERT INTO Order_History (order_id, order_status, timestamp)
+    VALUES (NEW.order_id, NEW.order_status, CURRENT_TIMESTAMP);
+END;
+
+
+CREATE TRIGGER IF NOT EXISTS log_order_update
+AFTER UPDATE ON Order_Cart
+FOR EACH ROW
+BEGIN
+    INSERT INTO Order_History (order_id, order_status, timestamp)
+    VALUES (NEW.order_id, NEW.order_status, CURRENT_TIMESTAMP);
+END;
+
+
+CREATE INDEX IF NOT EXISTS idx_order_history_timestamp
+ON Order_History(timestamp);
+
+
+-- 🧃 Order Product Table
+CREATE TABLE IF NOT EXISTS Order_Product (
+    order_id INTEGER,
+    product_id INTEGER,
+    service_area_id INTEGER,
+    option TEXT,
+    product_quantity INTEGER NOT NULL,
+    PRIMARY KEY (order_id, product_id),
+    FOREIGN KEY (order_id) REFERENCES Order_Cart(order_id),
+    FOREIGN KEY (product_id) REFERENCES Product_Item(product_id)
+);
+
+
+INSERT INTO Service_Area (service_area_id, description) VALUES
+(1, 'buffet tables for eight'),
+(2, 'square table for two'),
+(3, 'rectangular table for four'),
+(4, 'round table for six'),
+(5, 'VIP booth'),
+(6, 'outdoor patio table'),
+(7, 'bar counter seat'),
+(8, 'window-side table for two');
+
+-- 🗂️ Product Group  
+
+INSERT INTO Product_Group (product_group_id, description)
+VALUES
+  (1, 'Burgers and Sandwiches'),  -- 🍔
+  (2, 'Fried Chicken'),           -- 🍗
+  (3, 'Salads and Wraps'),        -- 🥗
+  (4, 'Sides');                   -- 🍟
+
+-- 🍔 Burgers and Sandwiches (Group ID: 1)
+INSERT INTO Product_Item (product_id, description, product_group_id, price, tax) VALUES
+(1, 'Classic Cheeseburger', 1, 599, 0.60),
+(2,  'Grilled Chicken Club', 1, 799, 0.80),
+(3, 'Veggie Burger', 1, 699, 0.70);
+
+-- 🍗 Fried Chicken (Group ID: 2)
+INSERT INTO Product_Item (product_id, description, product_group_id, price, tax) VALUES
+(5, 'Crispy Chicken Tenders (6 pcs)', 2, 699, 0.70),
+(6, 'Chicken Bucket (8 pcs)', 2, 1299, 1.30),
+(7, 'Spicy Fried Chicken Sandwich', 2, 679, 0.68);
+
+-- 🥗 Salads and Wraps (Group ID: 3)
+INSERT INTO Product_Item (product_id, description, product_group_id, price, tax) VALUES
+(8, 'Grilled Chicken Caesar Salad', 3, 749, 0.75),
+(9, 'Southwest Chicken Wrap', 3, 699, 0.70),
+(10, 'Garden Salad', 3, 599, 0.60);
+
+-- 🍟 Sides (Group ID: 4)
+INSERT INTO Product_Item (product_id, description, product_group_id, price, tax) VALUES
+(11, 'French Fries (Small)', 4, 249, 0.25),
+(12, 'French Fries (Large)', 4, 349, 0.35);
+
+
+INSERT INTO Product_Option (product_id, option) VALUES
+(1,'Sweet'),
+(1,'Spicy'),
+(2,'Sweet'),
+(2,'Spicy'),
+(3,'Sweet'),
+(3,'Spicy'),
+(4,'No tomato'); 
+
