@@ -6,8 +6,7 @@ from utils.style import load_css
 
 
 # Set selected_service_area 10 as default (if not set)
-if 'selected_service_area' not in st.session_state:
-    st.session_state.selected_service_area = 10
+st.session_state.selected_service_area = 10
 
 # Initialize session state for cart
 if 'cart' not in st.session_state:
@@ -96,8 +95,8 @@ def create_order():
         # Create order in Order_Cart
         cursor.execute('''
             INSERT INTO Order_Cart (service_area_id, order_status)
-            VALUES (?, 10)
-        ''', (st.session_state.selected_service_area,))
+            VALUES (10, 10)
+        ''')
         
         order_id = cursor.lastrowid
         st.session_state.order_id = order_id
@@ -195,8 +194,7 @@ def show_order_page():
         
         # Checkout button - disabled if no service area selected or cart is empty
         checkout_disabled = (
-            len(st.session_state.cart) == 0 or 
-            not st.session_state.get('selected_service_area')
+            len(st.session_state.cart) == 0 
         )
         
         if st.button("Checkout", type="primary", width='stretch', disabled=checkout_disabled):
