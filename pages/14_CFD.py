@@ -8,7 +8,7 @@ from utils.style import load_css
 
 
 
-# Get all open orders (order_status = 1)
+# Get all open orders (order_status = 11)
 def get_open_orders():
     conn = get_db_connection()
     cursor = conn.cursor()

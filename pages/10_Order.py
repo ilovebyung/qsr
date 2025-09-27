@@ -5,8 +5,8 @@ from utils.database import  get_db_connection
 from utils.style import load_css
 
 
-# Set selected_service_area 10 as default (if not set)
-st.session_state.selected_service_area = 10
+# Set selected_service_area 0 as default (if not set)
+st.session_state.selected_service_area = 0
 
 # Initialize session state for cart
 if 'cart' not in st.session_state:
@@ -95,7 +95,7 @@ def create_order():
         # Create order in Order_Cart
         cursor.execute('''
             INSERT INTO Order_Cart (service_area_id, order_status)
-            VALUES (10, 10)
+            VALUES (0, 10)
         ''')
         
         order_id = cursor.lastrowid
