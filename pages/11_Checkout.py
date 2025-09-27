@@ -4,22 +4,6 @@ from utils.util import format_price, calculate_split_amounts
 from utils.database import get_db_connection
 from utils.style import load_css 
 
-# # Get available service areas
-# def get_available_service_areas():
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-    
-#     cursor.execute("""
-#         SELECT DISTINCT oc.service_area_id
-#         FROM Order_Cart oc 
-#         WHERE oc.order_status IN (1, 2) 
-#         ORDER BY oc.service_area_id
-#     """)
-    
-#     results = cursor.fetchall()
-#     conn.close()
-#     return [row['service_area_id'] for row in results]
-
 # Get order details
 def get_order_details():
     conn = get_db_connection()
@@ -62,13 +46,6 @@ def settle_order(order_ids, total_charged):
                 WHERE order_id = ?
             """, (total_charged, order_id))
         
-        # # Update service area status to 0 (available)
-        # cursor.execute("""
-        #     UPDATE Service_Area 
-        #     SET status = 0 
-        #     WHERE service_area_id = ?
-        # """, (service_area_id,))
-        
         conn.commit()
         return True
     except Exception as e:
@@ -95,7 +72,7 @@ def handle_calculator_input(value):
 # Initialize session state
 def initialize_session_state():
     if 'selected_service_area' not in st.session_state:
-        st.session_state.selected_service_area = None
+        st.session_state.selected_service_area = 0
     if 'tips_amount' not in st.session_state:
         st.session_state.tips_amount = 0
     if 'amount_tendered' not in st.session_state:
@@ -123,112 +100,87 @@ def show_checkout_page():
     
     # COLUMN 1: SERVICE AREA DROPDOWN
     with col1:
-        st.markdown("### Select Service Area")
+  
+        order_data = get_order_details()
         
-        # # Get available service areas
-        # available_areas = get_available_service_areas()
+        if not order_data:
+            st.switch_page("pages/10_Order.py")
         
-        # if not available_areas:
-        #     st.error("No service areas with pending orders found.")
-        #     return
+        # Process order data
+        orders = {}
+        subtotal = 0
         
-        # # Service area dropdown
-        # selected_area = st.selectbox(
-        #     "Service Area ID:",
-        #     options=[None] + available_areas,
-        #     format_func=lambda x: "Select..." if x is None else str(x),
-        #     key="service_area_dropdown"
-        # )
+        for row in order_data:
+            order_id = row['order_id']
+            if order_id not in orders:
+                orders[order_id] = []
+            
+            if row['product_id']:  # Check if product exists
+                orders[order_id].append({
+                    'description': row['description'],
+                    'modifier': row['modifier'],
+                    'quantity': row['product_quantity'],
+                    'price': row['price']
+                })
+                subtotal += row['price'] * row['product_quantity']
+        
+        # Display Order Cart
+        st.markdown("---")
 
-        # Set selected_area 0 as default (if not set)
-        selected_area = 0
-        
-        if selected_area:
-            # st.session_state.selected_service_area = selected_area
-            
-            # Get order data only after service area is selected
-            order_data = get_order_details()
-            
-            if not order_data:
-                st.switch_page("pages/10_Order.py")
-            
-            # Process order data
-            orders = {}
-            subtotal = 0
-            
-            for row in order_data:
-                order_id = row['order_id']
-                if order_id not in orders:
-                    orders[order_id] = []
+        # Header
+        # st.subheader(f'Service Area: {selected_area}, Order: {", ".join(str(k) for k in orders.keys())}')
+        st.subheader(f'Order: {", ".join(str(k) for k in orders.keys())}')
+
+        # Prepare table data
+        table_data = []
+
+        for order_id, items in orders.items():
+            for item in items:
+                description = item['description']
+                if item['modifier']:
+                    description += f" ({item['modifier']})"
                 
-                if row['product_id']:  # Check if product exists
-                    orders[order_id].append({
-                        'description': row['description'],
-                        'modifier': row['modifier'],
-                        'quantity': row['product_quantity'],
-                        'price': row['price']
-                    })
-                    subtotal += row['price'] * row['product_quantity']
-            
-            # Display Order Cart
-            st.markdown("---")
+                quantity = item['quantity']
+                total_price = format_price(item['price'] * quantity)
 
-            # Header
-            # st.subheader(f'Service Area: {selected_area}, Order: {", ".join(str(k) for k in orders.keys())}')
-            st.subheader(f'Order: {", ".join(str(k) for k in orders.keys())}')
+                table_data.append({
+                    "Description": description,
+                    "Quantity": quantity,
+                    "Total": total_price
+                })
 
-            # Prepare table data
-            table_data = []
-
-            for order_id, items in orders.items():
-                for item in items:
-                    description = item['description']
-                    if item['modifier']:
-                        description += f" ({item['modifier']})"
-                    
-                    quantity = item['quantity']
-                    total_price = format_price(item['price'] * quantity)
-
-                    table_data.append({
-                        "Description": description,
-                        "Quantity": quantity,
-                        "Total": total_price
-                    })
-
-            # Create DataFrame
-            df = pd.DataFrame(table_data)
+        # Create DataFrame
+        df = pd.DataFrame(table_data)
 
 
-            # Display as table
-            st.table(df.set_index(df.columns[0]))
-            # st.table(df)  # or use st.dataframe(df) for scrollable, sortable table
-            
-            ## Payment Section    
-            # Constants
-            TAX = 175  # $1.75
-            
-            payment_items = [
-                ("Subtotal", subtotal),
-                ("Tax", TAX),
-                ("Tips", st.session_state.tips_amount)
-            ]
-            
-            for label, amount in payment_items:
-                st.markdown(f"""
-                <div class="payment-row">
-                    <span>{label}</span>
-                    <span>{format_price(amount)}</span>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # Tips Warning - Display if tips is larger than subtotal
-            if st.session_state.tips_amount > subtotal:
-                st.warning(f"⚠️ Warning:  Tips amount is larger than subtotal! ")
-        else:
-            st.info("Please select a service area to proceed with checkout.")
+        # Display as table
+        st.table(df.set_index(df.columns[0]))
+        # st.table(df)  # or use st.dataframe(df) for scrollable, sortable table
+        
+        ## Payment Section    
+        # Constants
+        TAX = 175  # $1.75
+        
+        payment_items = [
+            ("Subtotal", subtotal),
+            ("Tax", TAX),
+            ("Tips", st.session_state.tips_amount)
+        ]
+        
+        for label, amount in payment_items:
+            st.markdown(f"""
+            <div class="payment-row">
+                <span>{label}</span>
+                <span>{format_price(amount)}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Tips Warning - Display if tips is larger than subtotal
+        if st.session_state.tips_amount > subtotal:
+            st.warning(f"⚠️ Warning:  Tips amount is larger than subtotal! ")
     
     # Only show remaining columns if service area is selected
-    if st.session_state.selected_service_area and 'orders' in locals():
+    if 'orders' in locals():
         # Calculate totals
         total_tips = st.session_state.tips_amount
         balance_due = subtotal + TAX + total_tips

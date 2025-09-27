@@ -112,7 +112,7 @@ def show_cfd_page():
     
     # Footer with last updated time
     st.markdown("---")
-    st.write("Last updated at ", time.strftime(" %H:%M"))    
+    st.write("Last updated:", time.strftime("%Y-%m-%d %H:%M:%S"))     
 
 # Run the page
 if __name__ == "__main__":

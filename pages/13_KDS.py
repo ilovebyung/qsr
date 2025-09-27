@@ -19,7 +19,7 @@ def get_open_orders():
     cursor.execute("""
         SELECT DISTINCT 
             oc.order_id,
-            oc.service_area_id,
+            --oc.service_area_id,
             oc.order_status,
             oc.created_at
         FROM Order_Cart oc
@@ -85,7 +85,7 @@ def create_item_key(order_id, product_id, modifier, index):
 
 # Display order with checkboxes
 def display_order_with_checkboxes(order, items):
-    st.subheader(f'Service Area: {order["service_area_id"]}, Order: {order["order_id"]}')
+    st.subheader(f'Order: {order["order_id"]}')
     
     all_checked = True
     
