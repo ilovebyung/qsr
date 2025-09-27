@@ -45,8 +45,8 @@ def get_order_items(order_id):
             op.modifier,
             op.product_quantity
         FROM Order_Product op
-        INNER JOIN Product pi ON op.product_id = pi.product_id
         INNER JOIN Order_Cart oc ON op.order_id = oc.order_id
+        INNER JOIN Product pi ON op.product_id = pi.product_id
         WHERE op.order_id = ? AND oc.order_status = 11
         ORDER BY pi.description
     """, (order_id,))

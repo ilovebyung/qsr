@@ -23,9 +23,8 @@ def get_transaction_data(start_date, end_date):
         SELECT 
             oh.order_id,
             CASE oh.order_status
-                WHEN 1 THEN 'created'
-                WHEN 2 THEN 'confirmed'
-                WHEN 3 THEN 'completed'
+                WHEN 11 THEN 'ordered'
+                WHEN 12 THEN 'fulfilled'
                 ELSE 'unknown'
             END AS order_status,
             oh.timestamp,
