@@ -42,7 +42,7 @@ def get_order_items(order_id):
             op.order_id,
             op.product_id,
             pi.description as product_name,
-            -- op.option,
+            op.modifier,
             op.product_quantity
         FROM Order_Product op
         INNER JOIN Product pi ON op.product_id = pi.product_id
