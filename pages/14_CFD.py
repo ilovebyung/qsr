@@ -44,7 +44,7 @@ def get_order_items(order_id, status):
         INNER JOIN Order_Cart oc ON op.order_id = oc.order_id
         INNER JOIN Product pi ON op.product_id = pi.product_id
         WHERE op.order_id = ? AND oc.order_status = ? 
-            AND oc.created_at < datetime('now', '-60 minutes')
+            -- AND oc.created_at < datetime('now', '-60 minutes')
         ORDER BY pi.description
     """, (order_id, status))
     
