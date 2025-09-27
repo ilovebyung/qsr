@@ -11,7 +11,7 @@ def init_session_state():
     if 'item_states' not in st.session_state:
         st.session_state.item_states = {}
 
-# Get all open orders (order_status = 1)
+# Get all open orders (order_status = 11)
 def get_open_orders():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -80,8 +80,8 @@ def confirm_order(order_id):
         conn.close()
 
 # Create unique item key for session state
-def create_item_key(order_id, product_id, option, index):
-    return f"{order_id}_{product_id}_{option or 'none'}_{index}"
+def create_item_key(order_id, product_id, modifier, index):
+    return f"{order_id}_{product_id}_{modifier or 'none'}_{index}"
 
 # Display order with checkboxes
 def display_order_with_checkboxes(order, items):
@@ -91,12 +91,12 @@ def display_order_with_checkboxes(order, items):
     
     for i, item in enumerate(items):
         product_display = item['product_name']
-        if item['option']:
-            product_display += f" ({item['option']})"
+        if item['modifier']:
+            product_display += f" ({item['modifier']})"
         product_display += f" x {item['product_quantity']}"
         
         # Create unique key for this item
-        item_key = create_item_key(order['order_id'], item['product_id'], item['option'], i)
+        item_key = create_item_key(order['order_id'], item['product_id'], item['modifier'], i)
         
         # Initialize checkbox state if not exists
         if item_key not in st.session_state.item_states:
