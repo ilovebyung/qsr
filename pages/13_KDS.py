@@ -24,7 +24,7 @@ def get_open_orders():
             oc.created_at
         FROM Order_Cart oc
         INNER JOIN Order_Product op ON oc.order_id = op.order_id
-        WHERE oc.order_status = 1
+        WHERE oc.order_status = 11
         ORDER BY oc.created_at ASC
     """)
     
