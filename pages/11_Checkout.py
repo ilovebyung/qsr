@@ -150,8 +150,7 @@ def show_checkout_page():
             order_data = get_order_details()
             
             if not order_data:
-                st.error("No confirmed orders found for this service area.")
-                return
+                st.switch_page("pages/10_Order.py")
             
             # Process order data
             orders = {}
