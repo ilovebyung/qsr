@@ -55,7 +55,7 @@ def get_order_items(order_id):
     conn.close()
     return items
 
-# Confirm order (set order_status to 2)
+# Confirm order (set order_status to 12)
 def confirm_order(order_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -63,7 +63,7 @@ def confirm_order(order_id):
     try:
         cursor.execute("""
             UPDATE Order_Cart 
-            SET order_status = 2 
+            SET order_status = 12 
             WHERE order_id = ?
         """, (order_id,))
         
