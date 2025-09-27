@@ -140,8 +140,8 @@ def show_checkout_page():
         #     key="service_area_dropdown"
         # )
 
-        # Set selected_area 10 as default (if not set)
-        selected_area = 10
+        # Set selected_area 0 as default (if not set)
+        selected_area = 0
         
         if selected_area:
             # st.session_state.selected_service_area = selected_area
