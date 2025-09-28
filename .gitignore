@@ -64,6 +64,7 @@ l10n/
 sandbox.py
 sandbox/**
 split.py
+pos.schema
 *.sqlite
 *.db-shm
 *.db-wal

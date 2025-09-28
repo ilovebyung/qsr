@@ -7,8 +7,8 @@ from utils.database import  get_db_connection
 from utils.style import load_css 
 
 # Page configuration
-st.set_page_config(page_title="Daily Transactions", page_icon="📊", layout="wide")
-st.title("📊 Daily Transactions")
+st.set_page_config(page_title="Daily Transactions", page_icon="📑", layout="wide")
+st.title("📑 Daily Transactions")
 st.markdown("---")
 
 
@@ -31,13 +31,10 @@ def get_transaction_data(start_date, end_date):
             -- pi.product_id,
             pi.description as product_description,
             pi.price,
-            pi.tax,
             op.product_quantity,
             -- op.service_area_id,
             -- op.option,
-            (pi.price * op.product_quantity) as subtotal,
-            (pi.tax * op.product_quantity) as total_tax,
-            ((pi.price + pi.tax) * op.product_quantity) as total_amount
+            (pi.price * op.product_quantity) as amount
         FROM Order_History oh
         LEFT JOIN Order_Product op ON oh.order_id = op.order_id
         LEFT JOIN Product pi ON op.product_id = pi.product_id
@@ -66,11 +63,11 @@ def get_summary_data(start_date, end_date):
             COUNT(DISTINCT oh.order_id) as total_orders,
             COUNT(op.product_id) as total_items,
             SUM(op.product_quantity) as total_quantity,
-            SUM((pi.price + pi.tax) * op.product_quantity) as total_revenue
+            SUM((pi.price) * op.product_quantity) as total_revenue
         FROM Order_History oh
         LEFT JOIN Order_Product op ON oh.order_id = op.order_id
         LEFT JOIN Product pi ON op.product_id = pi.product_id
-        WHERE DATE(oh.timestamp) BETWEEN ? AND ? AND oh.order_status IN (3)
+        WHERE DATE(oh.timestamp) BETWEEN ? AND ? AND oh.order_status IN (12, 13)
         """
         
         result = conn.execute(query, (start_date, end_date)).fetchone()

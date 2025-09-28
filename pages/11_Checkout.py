@@ -17,7 +17,6 @@ def get_order_details():
             oc.subtotal,
             op.product_id,
             pi.description,
-            op.modifier ,
             op.product_quantity,
             pi.price
         FROM Order_Cart oc
@@ -118,7 +117,6 @@ def show_checkout_page():
             if row['product_id']:  # Check if product exists
                 orders[order_id].append({
                     'description': row['description'],
-                    'modifier': row['modifier'],
                     'quantity': row['product_quantity'],
                     'price': row['price']
                 })
@@ -137,9 +135,7 @@ def show_checkout_page():
         for order_id, items in orders.items():
             for item in items:
                 description = item['description']
-                if item['modifier']:
-                    description += f" ({item['modifier']})"
-                
+
                 quantity = item['quantity']
                 total_price = format_price(item['price'] * quantity)
 

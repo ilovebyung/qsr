@@ -43,7 +43,7 @@ def get_product_modifier(product_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT modifier FROM product_modifier 
+        SELECT description FROM modifier 
         WHERE product_id = ?
     ''', (product_id,))
     modifier = cursor.fetchall()
@@ -104,9 +104,9 @@ def create_order():
         # Insert items into Order_Product
         for item in st.session_state.cart:
             cursor.execute('''
-                INSERT INTO Order_Product (order_id, product_id, modifier, product_quantity)
-                VALUES (?, ?, ?, ?)
-            ''', (order_id, item['product_id'], item['modifier'], item['quantity']))
+                INSERT INTO Order_Product (order_id, product_id, product_quantity)
+                VALUES (?, ?, ?)
+            ''', (order_id, item['product_id'], item['quantity']))
         
         conn.commit()
         return True

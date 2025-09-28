@@ -15,7 +15,7 @@ sqlite3.register_converter("date", convert_date)
 
 # Connect with type detection enabled
 def get_db_connection():
-    conn = sqlite3.connect('pos.db', detect_types=sqlite3.PARSE_DECLTYPES)
+    conn = sqlite3.connect('pos.database', detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = sqlite3.Row
     conn.execute('PRAGMA journal_mode=WAL;')
     return conn

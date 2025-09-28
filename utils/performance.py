@@ -1,6 +1,6 @@
 import sqlite3, time
 
-conn = sqlite3.connect("performance.db")
+conn = sqlite3.connect("performance.database")
 conn.execute('PRAGMA journal_mode=WAL;')  # Enable WAL mode
 cur = conn.cursor()
 
@@ -18,7 +18,7 @@ conn.commit()
 
 # Update 1000 records
 cur.execute("BEGIN")
-cur.execute("UPDATE Order_Cart SET order_status = 1 WHERE order_status = 0")
+cur.execute("UPDATE Order_Cart SET order_status = 11 WHERE order_status = 10")
 conn.commit()
 cur.execute("select * from order_history order by timestamp;")
 
