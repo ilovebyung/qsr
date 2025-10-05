@@ -4,10 +4,6 @@ from utils.util import format_price
 from utils.database import  get_db_connection
 from utils.style import load_css
 
-
-# Set selected_service_area 0 as default (if not set)
-st.session_state.selected_service_area = 0
-
 # Initialize session state for cart
 if 'cart' not in st.session_state:
     st.session_state.cart = []
@@ -82,12 +78,7 @@ def create_order():
     """Create order and insert into database"""
     if not st.session_state.cart:
         return False
-    
-    # # Check if service area is selected
-    # if not st.session_state.get('selected_service_area'):
-    #     st.error("Select a service area to continue.")
-    #     return False
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -112,11 +103,7 @@ def create_order():
         return True
     except Exception as e:
         conn.rollback()
-        # Check if the error is related to service_area_id NOT NULL constraint
         error_message = str(e)
-        # if "NOT NULL constraint failed: Order_Cart.service_area_id" in error_message:
-        #     st.error("Select a service area to continue.")
-        # else:
         st.error(f"Error creating order: {e}")
         return False
     finally:
@@ -130,23 +117,9 @@ def show_order_page():
         page_icon="🛒",
         layout="wide"
     )
-    
     load_css()
 
     st.title("🛒 Order Cart")
-    
-    # Check if service area is selected and display appropriate message
-    # service_area_display = st.session_state.get('selected_service_area', 'Not Selected')
-    # if not st.session_state.get('selected_service_area'):
-    #     st.warning("⚠️ No service area selected. Please select a service area first.")
-    #     st.caption(f"Service area: {service_area_display} | Order #{st.session_state.order_id or 'New'}")
-        
-    #     # Add button to go back to service area selection
-    #     if st.button("🔙 Go to Service Area Selection", type="primary"):
-    #         st.switch_page("pages/1_Service_Area.py")
-    # else:
-    #     st.caption(f"Service area: {service_area_display} | Order #{st.session_state.order_id or 'New'}")
-    
     st.markdown("---")
 
     # Create two columns

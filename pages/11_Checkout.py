@@ -31,19 +31,19 @@ def get_order_details():
     return results
 
 # Update order status and service area
-# def settle_order(order_ids, total_charged, service_area_id):
-def settle_order(order_ids, total_charged):
+# def settle_order(order_ids, total, service_area_id):
+def settle_order(order_ids, total):
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
-        # Update order status to 11 (settled) and set charged amount
+        # Update order status to 11 (settled) and set total amount
         for order_id in order_ids:
             cursor.execute("""
                 UPDATE Order_Cart 
-                SET order_status = 11, charged = ?
+                SET order_status = 11, total = ?
                 WHERE order_id = ?
-            """, (total_charged, order_id))
+            """, (total, order_id))
         
         conn.commit()
         return True
@@ -72,8 +72,8 @@ def handle_calculator_input(value):
 def initialize_session_state():
     if 'selected_service_area' not in st.session_state:
         st.session_state.selected_service_area = 0
-    if 'tips_amount' not in st.session_state:
-        st.session_state.tips_amount = 0
+    # if 'tips_amount' not in st.session_state:
+    #     st.session_state.tips_amount = 0
     if 'amount_tendered' not in st.session_state:
         st.session_state.amount_tendered = 0
     if 'current_input' not in st.session_state:
@@ -95,7 +95,7 @@ def show_checkout_page():
     st.markdown("---")
 
     # FOUR COLUMN LAYOUT
-    col1, col2, col3, col4 = st.columns([2, 1.4, 1, 1])
+    col1, col2, col3 = st.columns([3, 1, 1])
     
     # COLUMN 1: SERVICE AREA DROPDOWN
     with col1:
@@ -122,9 +122,6 @@ def show_checkout_page():
                 })
                 subtotal += row['price'] * row['product_quantity']
         
-        # Display Order Cart
-        st.markdown("---")
-
         # Header
         # st.subheader(f'Service Area: {selected_area}, Order: {", ".join(str(k) for k in orders.keys())}')
         st.subheader(f'Order: {", ".join(str(k) for k in orders.keys())}')
@@ -159,8 +156,8 @@ def show_checkout_page():
         
         payment_items = [
             ("Subtotal", subtotal),
-            ("Tax", TAX),
-            ("Tips", st.session_state.tips_amount)
+            ("Tax", TAX)
+            # ("Tips", st.session_state.tips_amount)
         ]
         
         for label, amount in payment_items:
@@ -172,14 +169,14 @@ def show_checkout_page():
             """, unsafe_allow_html=True)
         
         # Tips Warning - Display if tips is larger than subtotal
-        if st.session_state.tips_amount > subtotal:
-            st.warning(f"⚠️ Warning:  Tips amount is larger than subtotal! ")
+        # if st.session_state.tips_amount > subtotal:
+        #     st.warning(f"⚠️ Warning:  Tips amount is larger than subtotal! ")
     
     # Only show remaining columns if service area is selected
     if 'orders' in locals():
         # Calculate totals
-        total_tips = st.session_state.tips_amount
-        balance_due = subtotal + TAX + total_tips
+        # total_tips = st.session_state.tips_amount
+        balance_due = subtotal + TAX #+ total_tips
         remaining_balance = balance_due - st.session_state.amount_tendered
         
         # COLUMN 2: NUMBER PAD
@@ -277,21 +274,21 @@ def show_checkout_page():
             
             st.markdown("---")
             
-            # Tips buttons
-            st.markdown("### Tips")
-            if st.button("Tips", key="tips_button", width='stretch', type="secondary"):
-                # Use current input as tips if available
-                if st.session_state.current_input:
-                    st.session_state.tips_amount = int(float(st.session_state.current_input) * 100)
-                    st.session_state.current_input = ""
-                    st.rerun()
+            # # Tips buttons
+            # st.markdown("### Tips")
+            # if st.button("Tips", key="tips_button", width='stretch', type="secondary"):
+            #     # Use current input as tips if available
+            #     if st.session_state.current_input:
+            #         st.session_state.tips_amount = int(float(st.session_state.current_input) * 100)
+            #         st.session_state.current_input = ""
+            #         st.rerun()
 
-            if st.button("Clear Tips", key="clear_tips_button", width='stretch', type="secondary"):
-                st.session_state.tips_amount = 0
-                st.rerun()
+            # if st.button("Clear Tips", key="clear_tips_button", width='stretch', type="secondary"):
+            #     st.session_state.tips_amount = 0
+            #     st.rerun()
         
-        # COLUMN 4: SPLIT & SETTLE
-        with col4:
+        # # COLUMN 4: SPLIT & SETTLE
+        # with col4:
             # Split evenly section
             st.markdown("### Split Evenly")
             
@@ -323,13 +320,11 @@ def show_checkout_page():
             
             # Settle Button
             if st.button("Settle", key="settle", width='stretch', type="primary"):
-                # Calculate total charged (subtotal + tax + tips)
-                total_charged = subtotal + TAX + total_tips
+                # Calculate total (subtotal + tax + tips)
+                total = subtotal + TAX #+ total_tips
                 
-                if settle_order(list(orders.keys()), total_charged):
+                if settle_order(list(orders.keys()), total):
                     # Clear session state
-                    # st.session_state.selected_service_area = None
-                    st.session_state.tips_amount = 0
                     st.session_state.amount_tendered = 0
                     st.session_state.current_input = ""
                     st.session_state.split_count = 1

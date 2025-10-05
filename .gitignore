@@ -66,5 +66,5 @@ sandbox/**
 split.py
 pos.schema
 *.sqlite
-*.db-shm
-*.db-wal
+*.database-shm
+*.database-wal
