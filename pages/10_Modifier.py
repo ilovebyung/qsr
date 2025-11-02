@@ -66,22 +66,21 @@ def get_modifier_group(product_id):
             'description': description,
             'price': price
         })
-    
     return modifier_groups
 
 def add_to_cart(product_id, product_name, price, modifiers):
     """Add item to cart or update quantity if already exists"""
-    # Normalize modifiers for comparison (sort to ensure consistent ordering)
-    normalized_modifiers = (modifiers) if modifiers else []
+    # Sort modifiers by modifier_id for consistent comparison
+    sorted_modifiers = sorted(modifiers, key=lambda x: x['modifier_id']) if modifiers else []
     
     # Check if item with same product and modifiers already exists
     for item in st.session_state.cart:
-        item_modifiers = (item['modifiers']) if item['modifiers'] else []
-        if item['product_id'] == product_id and item_modifiers == normalized_modifiers:
+        item_modifiers = sorted(item['modifiers'], key=lambda x: x['modifier_id']) if item['modifiers'] else []
+        if item['product_id'] == product_id and item_modifiers == sorted_modifiers:
             item['quantity'] += 1
             return
     
-    # Calculate total price including modifiers
+    # Calculate total price including all modifier prices
     modifier_price = sum(mod['price'] for mod in modifiers) if modifiers else 0
     total_price = price + modifier_price
     
@@ -91,7 +90,7 @@ def add_to_cart(product_id, product_name, price, modifiers):
         'product_name': product_name,
         'base_price': price,
         'price': total_price,
-        'modifiers': modifiers,
+        'modifiers': sorted_modifiers,
         'quantity': 1
     })
 
@@ -120,26 +119,18 @@ def create_order():
             INSERT INTO Order_Cart (service_area_id, order_status)
             VALUES (0, 10)
         ''')
-        
         order_id = cursor.lastrowid
         st.session_state.order_id = order_id
         
         # Insert items into Order_Product
         for item in st.session_state.cart:
+            # Create comma-separated list of modifier IDs
+            modifier_ids = ','.join(str(mod['modifier_id']) for mod in item['modifiers']) if item['modifiers'] else None
+            
             cursor.execute('''
-                INSERT INTO Order_Product (order_id, product_id, product_quantity)
-                VALUES (?, ?, ?)
-            ''', (order_id, item['product_id'], item['quantity']))
-            
-            order_product_id = cursor.lastrowid
-            
-            # Insert modifiers into Order_Product_Modifier if they exist
-            if item['modifiers']:
-                for modifier in item['modifiers']:
-                    cursor.execute('''
-                        INSERT INTO Order_Product_Modifier (order_id, product_id, modifier_id)
-                        VALUES (?, ?, ?)
-                    ''', (order_id, item['product_id'], modifier['modifier_id']))
+                INSERT INTO Order_Product (order_id, product_id, modifiers, product_quantity)
+                VALUES (?, ?, ?, ?)
+            ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
         
         conn.commit()
         return True
@@ -149,12 +140,11 @@ def create_order():
         return False
     finally:
         conn.close()
- 
-def show_order_page():
 
+def show_order_page():
     # Page layout
     st.set_page_config(
-        page_title="Order Cart",    
+        page_title="Order Cart", 
         page_icon="🛒",
         layout="wide"
     )
@@ -198,20 +188,18 @@ def show_order_page():
                                 st.rerun()
                     
                     with cart_col3:
-                        st.write(format_price(item['price']))
+                        st.write(format_price(item['price'] * item['quantity']))
                     
                     st.divider()
         else:
             st.info("Cart is empty")
         
         # Subtotal
-        st.divider()
         subtotal = calculate_subtotal()
         st.subheader(f"Subtotal: {format_price(subtotal)}")
         
         # Checkout button
         checkout_disabled = len(st.session_state.cart) == 0
-        
         if st.button("Checkout", type="primary", use_container_width=True, disabled=checkout_disabled):
             if create_order():
                 st.success("Order created successfully!")
@@ -244,10 +232,6 @@ def show_order_page():
                             
                             # Get modifier groups for this product
                             modifier_groups = get_modifier_group(product_id)
-                            
-                            # Initialize session state for this product's modifiers
-                            if f"selected_modifiers_{product_id}" not in st.session_state:
-                                st.session_state[f"selected_modifiers_{product_id}"] = []
                             
                             # Display modifier groups
                             if modifier_groups:
@@ -290,16 +274,15 @@ def show_order_page():
                                         modifiers = group_data['modifiers']
                                         
                                         if group_id == 0:
-                                            # Get checkbox selections
+                                            # Get checkbox selections (multiple modifiers)
                                             for modifier in modifiers:
                                                 checkbox_key = f"check_{product_id}_{modifier['modifier_id']}"
                                                 if st.session_state.get(checkbox_key, False):
                                                     selected_modifiers.append(modifier)
                                         else:
-                                            # Get radio selection
+                                            # Get radio selection (single modifier per group)
                                             radio_key = f"radio_{product_id}_{group_id}"
                                             selected_option = st.session_state.get(radio_key, "None")
-                                            
                                             if selected_option != "None":
                                                 # Find the matching modifier
                                                 for modifier in modifiers:
