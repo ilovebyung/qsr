@@ -2,13 +2,14 @@ import streamlit as st
 
 def load_css():
     """
-    Merges and loads all custom CSS styles for the Streamlit application.
-    This function combines styles for global elements, buttons, cards,
-    tables, and responsive design to ensure a consistent look and feel.
+    Loads all custom CSS styles for the Streamlit application.
+    Includes styling for buttons, forms, cards, tables, alerts, and responsive design.
     """
     st.markdown("""
     <style>
-    /* Global and Core Styling */
+    /* ============================================
+       GLOBAL AND CORE STYLING
+       ============================================ */
     :root {
         --primary-color: #3498db;
         --secondary-color: #28a745;
@@ -48,7 +49,9 @@ def load_css():
         padding-top: 0 !important;
     }
 
-    /* Page title and header styling */
+    /* ============================================
+       PAGE TITLE AND HEADER STYLING
+       ============================================ */
     .main h1 {
         color: var(--text-color);
         border-bottom: 3px solid var(--primary-color);
@@ -58,7 +61,10 @@ def load_css():
         font-weight: bold;
     }
 
-    /* Streamlit Button Styling Overrides */
+    /* ============================================
+       BUTTON STYLING
+       ============================================ */
+    /* Regular Button Styling */
     div.stButton > button {
         width: 100%;
         height: auto;
@@ -87,7 +93,7 @@ def load_css():
         padding: 2rem;
     }
 
-    /* Specific Streamlit Button States */
+    /* Button State Classes */
     .active-button {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
@@ -100,6 +106,7 @@ def load_css():
         border-color: var(--secondary-color) !important;
     }
     
+    /* Confirm Order Button */
     .stButton > button:has-text("Confirm Order") {
         background: var(--accent-color);
         color: white;
@@ -118,6 +125,7 @@ def load_css():
         box-shadow: 0 3px 8px rgba(255, 90, 95, 0.3);
     }
 
+    /* Secondary Button */
     .stButton > button[kind="secondary"] {
         height: 40px;
         background-color: #1f77b4;
@@ -130,14 +138,47 @@ def load_css():
         border-color: #0d5aa7;
     }
 
+    /* Disabled Button */
     .stButton > button:disabled {
         background-color: #ff4444;
         color: white;
         opacity: 0.7;
         cursor: not-allowed;
     }
-    
-    /* Cart section styling */
+
+    /* ============================================
+       FORM SUBMIT BUTTON STYLING
+       ============================================ */
+    .stFormSubmitButton > button {
+        width: 100%;
+        height: auto;
+        min-height: 45px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 8px;
+        border: none;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #2980b9 100%);
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    }
+
+    .stFormSubmitButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(135deg, #2980b9 0%, #1f618d 100%);
+        cursor: pointer;
+    }
+
+    .stFormSubmitButton > button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    }
+
+    /* ============================================
+       CARD AND CONTAINER STYLING
+       ============================================ */
+    /* Cart Container */
     .cart-container {
         background-color: var(--card-background);
         border: 2px solid #dee2e6;
@@ -147,7 +188,7 @@ def load_css():
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    /* Card Styling (General) */
+    /* Order Card */
     .order-card {
         background: var(--card-background);
         border: 2px solid #e1e5e9;
@@ -164,7 +205,7 @@ def load_css():
         transform: translateY(-2px);
     }
     
-    /* Order header styling */
+    /* Order Header */
     .order-header {
         background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
         color: white;
@@ -182,8 +223,10 @@ def load_css():
         border-radius: 6px;
         font-size: 12px;
     }
-    
-    /* Product table styling */
+
+    /* ============================================
+       TABLE STYLING
+       ============================================ */
     .product-table {
         width: 100%;
         border-collapse: collapse;
@@ -224,7 +267,9 @@ def load_css():
         width: 100px;
     }
 
-    /* Message and Alert Styling */
+    /* ============================================
+       MESSAGE AND ALERT STYLING
+       ============================================ */
     .stSuccess {
         background-color: #d4edda;
         border-color: #c3e6cb;
@@ -247,7 +292,23 @@ def load_css():
         font-weight: 500;
     }
 
-    /* Responsive design for smaller screens */
+    /* ============================================
+       ANIMATIONS
+       ============================================ */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN
+       ============================================ */
     @media (max-width: 768px) {
         .main > div {
             padding: 0.25rem !important;
@@ -261,21 +322,14 @@ def load_css():
             min-height: 100px;
             font-size: 1rem;
         }
+
+        .stFormSubmitButton > button {
+            min-height: 40px;
+            font-size: 0.95rem;
+        }
         
         .order-card {
             margin-bottom: 15px;
-        }
-    }
-
-    /* Animation */
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
         }
     }
     </style>

@@ -72,11 +72,11 @@ def get_modifier_group(product_id):
 def add_to_cart(product_id, product_name, price, modifiers):
     """Add item to cart or update quantity if already exists"""
     # Normalize modifiers for comparison (sort to ensure consistent ordering)
-    normalized_modifiers = sorted(modifiers) if modifiers else []
+    normalized_modifiers = (modifiers) if modifiers else []
     
     # Check if item with same product and modifiers already exists
     for item in st.session_state.cart:
-        item_modifiers = sorted(item['modifiers']) if item['modifiers'] else []
+        item_modifiers = (item['modifiers']) if item['modifiers'] else []
         if item['product_id'] == product_id and item_modifiers == normalized_modifiers:
             item['quantity'] += 1
             return
