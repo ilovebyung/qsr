@@ -116,9 +116,9 @@ def create_order():
     try:
         # Create order in Order_Cart
         cursor.execute('''
-            INSERT INTO Order_Cart (service_area_id, order_status)
-            VALUES (0, 10)
-        ''')
+            INSERT INTO Order_Cart (service_area_id, order_status, note)
+            VALUES (0, 10, ?)
+        ''', (st.session_state.note,))
         order_id = cursor.lastrowid
         st.session_state.order_id = order_id
         
@@ -193,7 +193,15 @@ def show_order_page():
                     st.divider()
         else:
             st.info("Cart is empty")
-        
+
+        # Input field for note
+        if 'note' not in st.session_state:
+            st.session_state.note = ''   
+
+        with st.popover("note"):
+            # st.markdown("Is there any special request? 👋")
+            st.session_state.note = st.text_input("Is there any special request? 👋")
+
         # Subtotal
         subtotal = calculate_subtotal()
         st.subheader(f"Subtotal: {format_price(subtotal)}")
