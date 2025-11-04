@@ -43,14 +43,15 @@ def get_order_items(order_id):
             op.order_id,
             op.product_id,
             pi.description as product_name,
-            m.description as modifier_name,
+            --m.description as modifier_name,
+            GROUP_CONCAT(m.description, ', ') AS modifier_names,
             op.product_quantity
         FROM Order_Product op
         INNER JOIN Order_Cart oc ON op.order_id = oc.order_id
         INNER JOIN Product pi ON op.product_id = pi.product_id
-        LEFT JOIN Modifier m ON op.product_id = m.product_id
+        RIGHT JOIN Modifier m ON op.product_id = m.product_id
         WHERE op.order_id = ? AND oc.order_status = 11 
-        ORDER BY pi.description
+        GROUP BY op.order_id,op.product_id  
     """, (order_id,))
     
     items = cursor.fetchall()
@@ -99,8 +100,8 @@ def display_order_with_checkboxes(order, items):
         product_display = item['product_name']
         
         # Add modifier name if it exists
-        if item['modifier_name'] and str(item['modifier_name']).strip():
-            product_display += f" ({item['modifier_name']})"
+        if item['modifier_names'] and str(item['modifier_names']).strip():
+            product_display += f" ({item['modifier_names']})"
         
         product_display += f" x {item['product_quantity']}"
         
