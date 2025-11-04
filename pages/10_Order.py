@@ -208,7 +208,7 @@ def show_order_page():
         
         # Checkout button
         checkout_disabled = len(st.session_state.cart) == 0
-        if st.button("Checkout", type="primary", use_container_width=True, disabled=checkout_disabled):
+        if st.button("Checkout", type="primary", use_container_width=False, disabled=checkout_disabled):
             if create_order():
                 st.success("Order created successfully!")
                 # Clear cart after successful order
@@ -273,7 +273,7 @@ def show_order_page():
                                         )
                             
                             # Add to cart button
-                            if st.button("Add to Cart", key=f"add_{product_id}", type="secondary", use_container_width=True):
+                            if st.button("Add to Cart", key=f"add_{product_id}", type="secondary", use_container_width=False):
                                 selected_modifiers = []
                                 
                                 # Collect selected modifiers

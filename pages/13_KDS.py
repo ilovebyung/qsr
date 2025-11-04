@@ -20,6 +20,7 @@ def get_open_orders():
         SELECT DISTINCT 
             oc.order_id,
             --oc.service_area_id,
+            oc.note,                   
             oc.order_status,
             oc.created_at
         FROM Order_Cart oc
@@ -42,11 +43,13 @@ def get_order_items(order_id):
             op.order_id,
             op.product_id,
             pi.description as product_name,
+            m.description as modifier_name,
             op.product_quantity
         FROM Order_Product op
         INNER JOIN Order_Cart oc ON op.order_id = oc.order_id
         INNER JOIN Product pi ON op.product_id = pi.product_id
-        WHERE op.order_id = ? AND oc.order_status = 11
+        INNER JOIN Modifier m ON op.product_id = m.product_id
+        WHERE op.order_id = ? AND oc.order_status = 11 AND m.modifier_id in (op.modifiers)
         ORDER BY pi.description
     """, (order_id,))
     
@@ -86,11 +89,19 @@ def create_item_key(order_id, product_id, index):
 def display_order_with_checkboxes(order, items):
     st.subheader(f'Order: {order["order_id"]}')
     
+    # Display order note if it exists
+    if order['note'] and str(order['note']).strip():
+        st.info(f"📝 Note: {order['note']}")
+    
     all_checked = True
     
     for i, item in enumerate(items):
         product_display = item['product_name']
-
+        
+        # Add modifier name if it exists
+        if item['modifier_name'] and str(item['modifier_name']).strip():
+            product_display += f" ({item['modifier_name']})"
+        
         product_display += f" x {item['product_quantity']}"
         
         # Create unique key for this item

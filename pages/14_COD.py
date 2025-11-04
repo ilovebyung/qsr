@@ -80,7 +80,7 @@ def display_orders_column(orders, status, title):
                     
 
 # Main CFD page
-def show_cfd_page():
+def show_cod_page():
     st.set_page_config(
         page_title="Customer-Facing Display",
         page_icon="🍳",
@@ -115,4 +115,4 @@ def show_cfd_page():
 if __name__ == "__main__":
     # Note: The st_autorefresh function is set to refresh the page every 10 seconds to keep the KDS updated.
     # st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
-    show_cfd_page()
+    show_cod_page()
