@@ -172,7 +172,6 @@ def display_order_with_checkboxes(order, items):
         with col1:
             is_checked = st.checkbox(
                 label="",
-                value=st.session_state.item_states[item_key],
                 key=f"checkbox_{item_key}",
                 label_visibility="collapsed"
             )
@@ -188,16 +187,34 @@ def display_order_with_checkboxes(order, items):
                 st.write(f"{product_display}")
                 all_checked = False
     
-    # Show confirm button
+    # Show confirm button with custom styling
     button_disabled = not all_checked
-    button_text = "All items ready - Confirm Order" if all_checked else "Confirm Order"
+    button_text = "✓ All Items Ready - Confirm Order" if all_checked else "Confirm Order"
+    button_type = "primary" if all_checked else "secondary"
+    
+    # Add custom CSS for button when ready
+    if all_checked:
+        st.markdown("""
+        <style>
+        div[data-testid="stButton"] button[kind="primary"] {
+            background-color: #0066CC !important;
+            border-color: #0066CC !important;
+            color: white !important;
+            font-weight: bold !important;
+        }
+        div[data-testid="stButton"] button[kind="primary"]:hover {
+            background-color: #0052A3 !important;
+            border-color: #0052A3 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
     
     if st.button(
         button_text, 
         key=f"confirm_{order['order_id']}", 
         disabled=button_disabled, 
         use_container_width=True,
-        type="primary" if all_checked else "secondary"
+        type=button_type
     ):
         if confirm_order(order['order_id']):
             st.success(f"Order {order['order_id']} confirmed!")
