@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import time
 from utils.util import format_price
-from utils.database import  get_db_connection 
+from utils.database import get_db_connection 
 from utils.style import load_css 
-# from streamlit_autorefresh import st_autorefresh
 
 # Initialize session state for checkbox tracking
 def init_session_state():
@@ -19,7 +18,6 @@ def get_open_orders():
     cursor.execute("""
         SELECT DISTINCT 
             oc.order_id,
-            --oc.service_area_id,
             oc.note,                   
             oc.order_status,
             oc.created_at
@@ -33,6 +31,47 @@ def get_open_orders():
     conn.close()
     return orders
 
+# Get modifier names for a comma-separated list of modifier IDs
+def get_modifier_names(modifier_ids_str):
+    """
+    Parse modifier IDs string and fetch their names
+    modifier_ids_str: "12,15" format
+    Returns: comma-separated string of modifier names
+    """
+    if not modifier_ids_str or modifier_ids_str.strip() == '':
+        return None
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        modifier_ids = [id.strip() for id in modifier_ids_str.split(',') if id.strip()]
+        
+        if not modifier_ids:
+            return None
+        
+        placeholders = ','.join(['?' for _ in modifier_ids])
+        
+        cursor.execute(f"""
+            SELECT description
+            FROM Modifier
+            WHERE modifier_id IN ({placeholders})
+            AND status = 1
+            ORDER BY modifier_id
+        """, modifier_ids)
+        
+        modifiers = cursor.fetchall()
+        
+        if modifiers:
+            return ', '.join([mod['description'] for mod in modifiers])
+        return None
+        
+    except Exception as e:
+        print(f"Error getting modifier names: {e}")
+        return None
+    finally:
+        conn.close()
+
 # Get order items for a specific order
 def get_order_items(order_id):
     conn = get_db_connection()
@@ -42,21 +81,28 @@ def get_order_items(order_id):
         SELECT 
             op.order_id,
             op.product_id,
+            op.modifiers,
             pi.description as product_name,
-            --m.description as modifier_name,
-            GROUP_CONCAT(m.description, ', ') AS modifier_names,
             op.product_quantity
         FROM Order_Product op
         INNER JOIN Order_Cart oc ON op.order_id = oc.order_id
         INNER JOIN Product pi ON op.product_id = pi.product_id
-        RIGHT JOIN Modifier m ON op.product_id = m.product_id
-        WHERE op.order_id = ? AND oc.order_status = 11 
-        GROUP BY op.order_id,op.product_id,op.modifiers  
+        WHERE op.order_id = ? AND oc.order_status = 11
+        ORDER BY pi.description
     """, (order_id,))
     
     items = cursor.fetchall()
     conn.close()
-    return items
+    
+    # Process items to add modifier names
+    processed_items = []
+    for item in items:
+        item_dict = dict(item)
+        # Get the actual selected modifier names
+        item_dict['modifier_names'] = get_modifier_names(item['modifiers'])
+        processed_items.append(item_dict)
+    
+    return processed_items
 
 # Confirm order (set order_status to 12)
 def confirm_order(order_id):
@@ -72,7 +118,8 @@ def confirm_order(order_id):
         
         conn.commit()
         # Clean up session state for this order
-        keys_to_remove = [key for key in st.session_state.item_states.keys() if key.startswith(f"{order_id}_")]
+        keys_to_remove = [key for key in st.session_state.item_states.keys() 
+                         if key.startswith(f"{order_id}_")]
         for key in keys_to_remove:
             del st.session_state.item_states[key]
         return True
@@ -83,8 +130,10 @@ def confirm_order(order_id):
         conn.close()
 
 # Create unique item key for session state
-def create_item_key(order_id, product_id, index):
-    return f"{order_id}_{product_id}_{index}"
+def create_item_key(order_id, product_id, modifiers, index):
+    """Create unique key including modifiers to handle same product with different modifiers"""
+    modifier_part = modifiers if modifiers else "none"
+    return f"{order_id}_{product_id}_{modifier_part}_{index}"
 
 # Display order with checkboxes
 def display_order_with_checkboxes(order, items):
@@ -99,14 +148,19 @@ def display_order_with_checkboxes(order, items):
     for i, item in enumerate(items):
         product_display = item['product_name']
         
-        # Add modifier name if it exists
-        if item['modifier_names'] and str(item['modifier_names']).strip():
+        # Add modifier names if they exist
+        if item['modifier_names']:
             product_display += f" ({item['modifier_names']})"
         
         product_display += f" x {item['product_quantity']}"
         
-        # Create unique key for this item
-        item_key = create_item_key(order['order_id'], item['product_id'], i)
+        # Create unique key for this item (including modifiers)
+        item_key = create_item_key(
+            order['order_id'], 
+            item['product_id'], 
+            item['modifiers'],
+            i
+        )
         
         # Initialize checkbox state if not exists
         if item_key not in st.session_state.item_states:
@@ -138,7 +192,13 @@ def display_order_with_checkboxes(order, items):
     button_disabled = not all_checked
     button_text = "All items ready - Confirm Order" if all_checked else "Confirm Order"
     
-    if st.button(button_text, key=f"confirm_{order['order_id']}", disabled=button_disabled, use_container_width=True):
+    if st.button(
+        button_text, 
+        key=f"confirm_{order['order_id']}", 
+        disabled=button_disabled, 
+        use_container_width=True,
+        type="primary" if all_checked else "secondary"
+    ):
         if confirm_order(order['order_id']):
             st.success(f"Order {order['order_id']} confirmed!")
             st.rerun()
@@ -163,9 +223,7 @@ def show_kds_page():
     orders = get_open_orders()
     
     if not orders:
-        st.subheader("""
-                📋 No pending orders. All caught up! 🎉
-            """)
+        st.subheader("📋 No pending orders. All caught up! 🎉")
         return
     
     # Display orders in three fixed columns
@@ -186,6 +244,7 @@ def show_kds_page():
 
 # Run the page
 if __name__ == "__main__":
-    # Note: The st_autorefresh function is set to refresh the page every 10 seconds to keep the KDS updated.
+    # Uncomment to enable auto-refresh every 10 seconds
+    # from streamlit_autorefresh import st_autorefresh
     # st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     show_kds_page()
