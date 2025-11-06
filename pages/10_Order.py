@@ -34,7 +34,7 @@ def get_product_items(group_id):
     conn.close()
     return items
 
-def get_modifier_group(product_id):
+def get_modifiers(product_id):
     """Get modifier groups and their modifiers for a specific product"""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -202,6 +202,10 @@ def show_order_page():
             # st.markdown("Is there any special request? 👋")
             st.session_state.note = st.text_input("Is there any special request? 👋")
 
+        # Add vertical space to push the Checkout button down
+        for _ in range(6):
+            st.write("")
+
         # Subtotal
         subtotal = calculate_subtotal()
         st.subheader(f"Subtotal: {format_price(subtotal)}")
@@ -239,7 +243,7 @@ def show_order_page():
                             st.write(f"**{product_name}** - {format_price(price)}")
                             
                             # Get modifier groups for this product
-                            modifier_groups = get_modifier_group(product_id)
+                            modifier_groups = get_modifiers(product_id)
                             
                             # Display modifier groups
                             if modifier_groups:

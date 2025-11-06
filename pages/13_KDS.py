@@ -51,7 +51,7 @@ def get_order_items(order_id):
         INNER JOIN Product pi ON op.product_id = pi.product_id
         RIGHT JOIN Modifier m ON op.product_id = m.product_id
         WHERE op.order_id = ? AND oc.order_status = 11 
-        GROUP BY op.order_id,op.product_id  
+        GROUP BY op.order_id,op.product_id,op.modifiers  
     """, (order_id,))
     
     items = cursor.fetchall()
