@@ -20,7 +20,7 @@ def get_category():
     conn.close()
     return groups
 
-def get_product_items(group_id):
+def get_products(group_id):
     """Get product items for a specific group"""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -198,7 +198,7 @@ def show_order_page():
         if 'note' not in st.session_state:
             st.session_state.note = ''   
 
-        with st.popover("note"):
+        with st.popover("Name & Note"):
             # st.markdown("Is there any special request? 👋")
             st.session_state.note = st.text_input("Is there any special request? 👋")
 
@@ -235,7 +235,7 @@ def show_order_page():
             for i, (group_id, group_name) in enumerate(category):
                 with tabs[i]:
                     # Get product items for this group
-                    product_items = get_product_items(group_id)
+                    product_items = get_products(group_id)
                     
                     # Display product items
                     for product_id, product_name, price in product_items:

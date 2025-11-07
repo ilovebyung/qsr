@@ -17,6 +17,7 @@ def get_orders_by_status(status):
             oc.order_id,
             oc.service_area_id,
             oc.order_status,
+            oc.note,
             oc.created_at
         FROM Order_Cart oc
         INNER JOIN Order_Product op ON oc.order_id = op.order_id
@@ -66,11 +67,11 @@ def display_orders_column(orders, status, title):
         
         with sub_cols[col_index]:
             # Get items for this order
-            items = get_order_items(order['order_id'], status)
+            items = get_order_items(order['order_id'],status)
             
             if items:  # Only display if order has items
                 with st.container():
-                    st.markdown(f"### Order: {order['order_id']}")
+                    st.markdown(f"### Order: {order['order_id']} _ {order['note']}")
                     
                     # Display items
                     for item in items:
