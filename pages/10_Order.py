@@ -144,13 +144,13 @@ def create_order():
 def show_order_page():
     # Page layout
     st.set_page_config(
-        page_title="Order Cart", 
-        page_icon="🛒",
+        page_title="Orders", 
+        page_icon="🗒",
         layout="wide"
     )
     load_css()
 
-    st.title("🛒 Order Cart")
+    st.title("🗒 Orders")
     st.markdown("---")
 
     # Create two columns
@@ -158,7 +158,7 @@ def show_order_page():
 
     # Left column - Cart
     with col_cart:
-        st.subheader("Order Cart")
+        st.subheader("Orders")
         
         if st.session_state.cart:
             # Display cart items

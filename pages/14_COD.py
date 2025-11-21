@@ -74,10 +74,10 @@ def display_orders_column(orders, status, title):
                     st.markdown(f"### Order: {order['order_id']} _ {order['note']}")
                     
                     # Display items
-                    for item in items:
-                        product_display = item['product_name']
+                    # for item in items:
+                        # product_display = item['product_name']
 
-                        st.write(f"• {product_display} x {item['product_quantity']}")
+                        # st.write(f"• {product_display} x {item['product_quantity']}")
                     
 
 # Main CFD page
