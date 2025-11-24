@@ -113,8 +113,8 @@ def show_checkout_page():
     load_css()
     initialize_session_state()
 
-    st.title("💳 Checkout")
-    st.markdown("---")
+    # st.title("💳 Checkout")
+    # st.markdown("---")
 
     col1, col2, col3 = st.columns([3, 1, 1])
     

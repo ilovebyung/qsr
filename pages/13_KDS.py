@@ -233,8 +233,8 @@ def show_kds_page():
     
     load_css()
     
-    st.title("🍳 Kitchen Display System")
-    st.markdown("---")
+    # st.title("🍳 Kitchen Display System")
+    # st.markdown("---")
 
     # Get open orders
     orders = get_open_orders()

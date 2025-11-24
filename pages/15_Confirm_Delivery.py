@@ -96,8 +96,8 @@ def show_delivery_page():
     
     load_css()
     
-    st.title("🥡 Delivery Confirm System")
-    st.markdown("---")
+    # st.title("🥡 Delivery Confirm System")
+    # st.markdown("---")
 
     # Get open orders
     orders = get_open_orders()

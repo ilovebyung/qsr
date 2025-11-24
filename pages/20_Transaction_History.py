@@ -8,8 +8,8 @@ from utils.style import load_css
 
 # Page configuration
 st.set_page_config(page_title="Transaction History", page_icon="📑", layout="wide")
-st.title("📑 Transaction History")
-st.markdown("---")
+# st.title("📑 Transaction History")
+# st.markdown("---")
 
 
 def get_transaction_data(start_date, end_date):

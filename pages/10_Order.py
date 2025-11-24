@@ -150,8 +150,8 @@ def show_order_page():
     )
     load_css()
 
-    st.title("🗒 Orders")
-    st.markdown("---")
+    # st.title("🗒 Orders")
+    # st.markdown("---")
 
     # Create two columns
     col_cart, col_menu = st.columns([1, 2])
@@ -198,9 +198,11 @@ def show_order_page():
         if 'note' not in st.session_state:
             st.session_state.note = ''   
 
-        with st.popover("Name & Note"):
-            # st.markdown("Is there any special request? 👋")
-            st.session_state.note = st.text_input("Is there any special request? 👋")
+        with st.popover("Name"):
+            st.session_state.name = st.text_input("Your name please? 👋")
+
+        with st.popover("Note"):
+            st.session_state.note = st.text_input("Special request? 👋")
 
         # Add vertical space to push the Checkout button down
         for _ in range(6):
@@ -248,12 +250,12 @@ def show_order_page():
                             # Display modifier groups
                             if modifier_groups:
                                 for group_id, group_data in modifier_groups.items():
-                                    group_desc = group_data['group_description'] or "Options"
+                                    # group_desc = group_data['group_description'] or "Options"
                                     modifiers = group_data['modifiers']
                                     
                                     if group_id == 0:
                                         # Checkbox for group_id = 0 (multiple selection)
-                                        st.write(f"*{group_desc}:*")
+                                        # st.write(f"*{group_desc}:*")
                                         for modifier in modifiers:
                                             mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
                                             checkbox_key = f"check_{product_id}_{modifier['modifier_id']}"
@@ -263,14 +265,14 @@ def show_order_page():
                                             )
                                     else:
                                         # Radio button for group_id != 0 (single selection)
-                                        st.write(f"*{group_desc}:*")
+                                        # st.write(f"*{group_desc}:*")
                                         radio_options = ["None"] + [
                                             f"{mod['description']}" + (f" (+{format_price(mod['price'])})" if mod['price'] > 0 else "")
                                             for mod in modifiers
                                         ]
                                         radio_key = f"radio_{product_id}_{group_id}"
                                         st.radio(
-                                            group_desc,
+                                            # group_desc,
                                             radio_options,
                                             key=radio_key,
                                             label_visibility="collapsed"
