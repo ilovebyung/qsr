@@ -5,9 +5,6 @@ import os
 st.set_page_config(page_title="Home", page_icon="🏠", layout="wide")
 st.title("🏠 Welcome to QSR Home ")
 
-# Navigation hint
-st.subheader("👈 Use the sidebar to navigate")
-
 
 # Input field for name
 if 'name' not in st.session_state:

@@ -17,7 +17,7 @@ def get_orders_by_status(status):
             oc.order_id,
             oc.service_area_id,
             oc.order_status,
-            oc.note,
+            oc.provided_name,
             oc.created_at
         FROM Order_Cart oc
         INNER JOIN Order_Product op ON oc.order_id = op.order_id
@@ -71,7 +71,7 @@ def display_orders_column(orders, status, title):
             
             if items:  # Only display if order has items
                 with st.container():
-                    st.markdown(f"### Order: {order['order_id']} _ {order['note']}")
+                    st.markdown(f"### Order: {order['order_id']} &nbsp; {order['provided_name']}")
                     
                     # Display items
                     # for item in items:
@@ -114,6 +114,7 @@ def show_cod_page():
 
 # Run the page
 if __name__ == "__main__":
-    # Note: The st_autorefresh function is set to refresh the page every 10 seconds to keep the KDS updated.
-    # st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
+    # Uncomment to enable auto-refresh every 10 seconds
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     show_cod_page()

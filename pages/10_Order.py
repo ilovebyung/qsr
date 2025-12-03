@@ -116,9 +116,9 @@ def create_order():
     try:
         # Create order in Order_Cart
         cursor.execute('''
-            INSERT INTO Order_Cart (service_area_id, order_status, note)
-            VALUES (0, 10, ?)
-        ''', (st.session_state.note,))
+            INSERT INTO Order_Cart (service_area_id, order_status, provided_name, note)
+            VALUES (0, 10, ?, ?)
+        ''', (st.session_state.provided_name, st.session_state.note))
         order_id = cursor.lastrowid
         st.session_state.order_id = order_id
         
@@ -194,15 +194,16 @@ def show_order_page():
         else:
             st.info("Cart is empty")
 
-        # Input field for note
-        if 'note' not in st.session_state:
-            st.session_state.note = ''   
+        # Input field for provided_name and note
+        if 'provided_name' not in st.session_state:
+            st.session_state.provided_name = ''   
+            st.session_state.note = ''  
 
-        with st.popover("Name"):
-            st.session_state.name = st.text_input("Your name please? 👋")
+        # with st.popover("Name"):
+        st.session_state.provided_name = st.text_input("Name? 👋")
 
-        with st.popover("Note"):
-            st.session_state.note = st.text_input("Special request? 👋")
+        # with st.popover("Note"):
+        st.session_state.note = st.text_input("Any special request? 👋")
 
         # Add vertical space to push the Checkout button down
         for _ in range(6):

@@ -1,4 +1,2 @@
 streamlit
-ipykernel
-st_autorefresh
 streamlit_autorefresh

@@ -262,6 +262,6 @@ def show_kds_page():
 # Run the page
 if __name__ == "__main__":
     # Uncomment to enable auto-refresh every 10 seconds
-    # from streamlit_autorefresh import st_autorefresh
-    # st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     show_kds_page()
