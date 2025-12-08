@@ -203,11 +203,11 @@ def show_order_page():
         st.session_state.provided_name = st.text_input("Name? 👋")
 
         # with st.popover("Note"):
-        st.session_state.note = st.text_input("Any special request? 👋")
+        st.session_state.note = st.text_input("Special request? 👋")
 
-        # Add vertical space to push the Checkout button down
-        for _ in range(6):
-            st.write("")
+        # # Add vertical space to push the Checkout button down
+        # for _ in range(6):
+        #     st.write("")
 
         # Subtotal
         subtotal = calculate_subtotal()

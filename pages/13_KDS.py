@@ -4,6 +4,8 @@ import time
 from utils.util import format_price
 from utils.database import get_db_connection 
 from utils.style import load_css 
+from utils.util import play_background_audio
+from streamlit_autorefresh import st_autorefresh
 
 # Initialize session state for checkbox tracking
 def init_session_state():
@@ -262,6 +264,7 @@ def show_kds_page():
 # Run the page
 if __name__ == "__main__":
     # Uncomment to enable auto-refresh every 10 seconds
-    from streamlit_autorefresh import st_autorefresh
+    # st.audio("assets/ding-dong.mp3", format="audio/mpeg", loop=False)
+    play_background_audio("assets/ding-dong.mp3")
     st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     show_kds_page()

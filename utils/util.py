@@ -1,5 +1,6 @@
-# Custom CSS for styling
 import streamlit as st
+import streamlit.components.v1 as components
+import base64
 import datetime
 
 # # Format price from integer to dollar format
@@ -46,3 +47,26 @@ def calculate_split_amounts(total, split_count):
         amounts[i] += 1
     
     return amounts
+
+
+
+def play_background_audio(file):
+    with open(file, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        
+    # HTML/JS to trigger playback without a visible player
+    md = f"""
+        <audio id="audio-tag" autoplay>
+            <source src="data:audio/mpeg;base64,{b64}" type="audio/mpeg">
+        </audio>
+        <script>
+            var audio = document.getElementById('audio-tag');
+            audio.volume = 0.5; // Optional: Adjust volume
+            audio.play();
+        </script>
+    """
+    components.html(md, height=0, width=0)
+
+# Implementation
+play_background_audio("assets/ding-dong.mp3")

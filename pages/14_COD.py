@@ -4,7 +4,7 @@ import time
 from utils.util import format_price
 from utils.database import  get_db_connection 
 from utils.style import load_css 
-# from streamlit_autorefresh import st_autorefresh
+from streamlit_autorefresh import st_autorefresh
 
 
 # Get orders by status
@@ -115,6 +115,5 @@ def show_cod_page():
 # Run the page
 if __name__ == "__main__":
     # Uncomment to enable auto-refresh every 10 seconds
-    from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     show_cod_page()
