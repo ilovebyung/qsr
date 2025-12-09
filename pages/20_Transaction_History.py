@@ -33,10 +33,9 @@ def get_transaction_data(start_date, end_date):
             -- pi.product_id,
             pi.description as product_description,
             pi.price,
-            op.product_quantity,
+            op.product_quantity
             -- op.service_area_id,
-            -- op.option,
-            (pi.price * op.product_quantity) as amount
+            --(pi.price * op.product_quantity) as amount
         FROM Order_History oh
         LEFT JOIN Order_Product op ON oh.order_id = op.order_id
         LEFT JOIN Product pi ON op.product_id = pi.product_id
@@ -92,7 +91,7 @@ st.sidebar.header(" Date Selection")
 # Date range selection
 date_option = st.sidebar.radio(
     "Select date range:",
-    ["Single Day", "Date Range", "Last 7 Days", "Last 30 Days"]
+    ["Single Day", "Last 7 Days", "Last 30 Days"]
 )
 
 today = date.today()
@@ -104,23 +103,7 @@ if date_option == "Single Day":
         max_value=today
     )
     start_date = end_date = selected_date
-    
-elif date_option == "Date Range":
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        start_date = st.sidebar.date_input(
-            "Start date:",
-            value=today - timedelta(days=7),
-            max_value=today
-        )
-    with col2:
-        end_date = st.sidebar.date_input(
-            "End date:",
-            value=today,
-            max_value=today,
-            min_value=start_date
-        )
-        
+      
 elif date_option == "Last 7 Days":
     start_date = today - timedelta(days=7)
     end_date = today
@@ -197,7 +180,7 @@ else:
         # 'option': 'Option',
         'subtotal': 'Subtotal',
         'total_tax': 'Total Tax',
-        'total_amount': 'Total Amount'
+        #'total_amount': 'Total Amount'
     }
     
     display_df = display_df.rename(columns=column_mapping)
@@ -239,7 +222,7 @@ else:
             # "Option": st.column_config.TextColumn("Option", width="medium"),
             "Subtotal": st.column_config.TextColumn("Subtotal", width="small"),
             # "Total Tax": st.column_config.TextColumn("Total Tax", width="small"),
-            "Total Amount": st.column_config.TextColumn("Total Amount", width="small")
+            # "Total Amount": st.column_config.TextColumn("Total Amount", width="small")
         }
     )
     

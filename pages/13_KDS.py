@@ -193,5 +193,5 @@ def show_kds_page():
 
 # Run the page
 if __name__ == "__main__":
-    st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
+    st_autorefresh(interval=10*1000, limit=None, key="refresh")
     show_kds_page()
