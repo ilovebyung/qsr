@@ -37,7 +37,8 @@ def get_order_items(order_id):
             op.order_id,
             op.product_id,
             pi.description as product_name,
-            op.product_quantity
+            op.product_quantity,
+            oc.provided_name
         FROM Order_Product op
         INNER JOIN Order_Cart oc ON op.order_id = oc.order_id
         INNER JOIN Product pi ON op.product_id = pi.product_id
@@ -78,7 +79,10 @@ def display_order(order, items):
 
         product_display += f" x {item['product_quantity']}"
         
-        st.write(f"• {product_display}")
+        st.write(f"• {product_display}  &nbsp; {item['provided_name']}")
+
+
+        # st.markdown(f"### Order: {order['order_id']} &nbsp; {order['provided_name']}")
     
     # Show confirm button
     if st.button("Confirm Delivery", key=f"confirm_{order['order_id']}", use_container_width=True):

@@ -297,5 +297,17 @@ def show_checkout_page():
                     st.success("Order settled successfully!")
                     st.switch_page("pages/10_Order.py")
 
+            # Settle Button
+            if st.button("Settle with receipt", key="settle_receipt", use_container_width=True, type="primary"):
+                total = subtotal + TAX
+                
+                if settle_order(list(orders.keys()), total):
+                    st.session_state.amount_tendered = 0
+                    st.session_state.current_input = ""
+                    st.session_state.split_count = 1
+                    
+                    st.success("Order settled successfully!")
+                    st.switch_page("pages/10_Order.py")
+
 if __name__ == "__main__":
     show_checkout_page()
