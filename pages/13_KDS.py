@@ -173,7 +173,8 @@ def show_kds_page():
     current_order_ids = {order['order_id'] for order in orders}
     new_orders = current_order_ids - st.session_state.known_orders
     if new_orders:
-        play_background_audio("assets/ding-dong.mp3")
+        # play_background_audio("assets/ding-dong.mp3")
+        play_background_audio("ding-dong.mp3")
     st.session_state.known_orders = current_order_ids
 
     if not orders:
@@ -193,5 +194,5 @@ def show_kds_page():
 
 # Run the page
 if __name__ == "__main__":
-    st_autorefresh(interval=10*1000, limit=None, key="refresh")
+    st_autorefresh(interval=2000, limit=None, key="refresh")
     show_kds_page()

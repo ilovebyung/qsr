@@ -2,4 +2,7 @@
 toolbarMode = "minimal"
 [server]
 #enableStaticServing = false
+[theme]
+base = "dark"
+
 

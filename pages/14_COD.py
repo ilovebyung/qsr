@@ -115,5 +115,5 @@ def show_cod_page():
 # Run the page
 if __name__ == "__main__":
     # Uncomment to enable auto-refresh every 10 seconds
-    st_autorefresh(interval=10*1000, limit=None, key="refresh")
+    st_autorefresh(interval=2000, limit=None, key="refresh")
     show_cod_page()

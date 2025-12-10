@@ -157,3 +157,4 @@ def show_orders_page():
 
 if __name__ == "__main__":
     show_orders_page()
+    st.info(f"Showing receipt for pending orders only.")
