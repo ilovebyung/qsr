@@ -10,10 +10,6 @@ from utils.database import update_row, delete_row, get_table_data
 
 # Page configuration
 st.set_page_config(page_title="Manage Product", page_icon="🛠️", layout="wide", initial_sidebar_state="collapsed")
-# st.title("🛠️ Manage Product")
-# st.markdown("---")
-
-
 
 # # Set page config
 # st.set_page_config(page_title="Manage Product", page_icon="🧳", layout="wide")

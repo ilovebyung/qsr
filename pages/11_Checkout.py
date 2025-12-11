@@ -4,6 +4,9 @@ from utils.util import format_price, calculate_split_amounts
 from utils.database import get_db_connection
 from utils.style import load_css 
 
+st.set_page_config(page_title="Checkout",page_icon="💳",layout="wide",initial_sidebar_state="collapsed")
+load_css()
+
 # Get order details with modifiers
 def get_order_details():
     conn = get_db_connection()
@@ -105,13 +108,7 @@ def initialize_session_state():
         st.session_state.split_count = 1
 
 def show_checkout_page():
-    st.set_page_config(
-        page_title="Checkout",
-        page_icon="💳",
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
-    load_css()
+
     initialize_session_state()
 
     # st.title("💳 Checkout")

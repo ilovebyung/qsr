@@ -6,6 +6,8 @@ from utils.database import  get_db_connection
 from utils.style import load_css 
 from streamlit_autorefresh import st_autorefresh
 
+st.set_page_config(page_title="Customer-Facing Display",page_icon="🍳",layout="wide",initial_sidebar_state="collapsed")
+load_css()
 
 # Get orders by status
 def get_orders_by_status(status):
@@ -82,17 +84,6 @@ def display_orders_column(orders, status, title):
 
 # Main CFD page
 def show_cod_page():
-    st.set_page_config(
-        page_title="Customer-Facing Display",
-        page_icon="🍳",
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
-    
-    load_css()
-    
-    # Main title
-    # st.title("Kitchen Display System")
     
     # Create two main columns
     left_col, right_col = st.columns(2)

@@ -5,6 +5,9 @@ from utils.util import format_price
 from utils.database import get_db_connection
 from utils.style import load_css
 
+st.set_page_config(page_title="Orders Display",page_icon="📋",layout="wide",initial_sidebar_state="collapsed")
+load_css()
+
 def get_order_details():
     """Get all orders with status 10 (pending)"""
     conn = get_db_connection()
@@ -59,14 +62,7 @@ def get_modifiers_details(modifier_ids_str):
 
 def show_orders_page():
     """Display all pending orders"""
-    st.set_page_config(
-        page_title="Orders Display",
-        page_icon="📋",
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
-    load_css()
-    
+   
     # Auto-refresh every 10 seconds
     st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     

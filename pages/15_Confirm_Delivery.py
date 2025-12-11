@@ -4,7 +4,10 @@ import time
 from utils.util import format_price
 from utils.database import  get_db_connection 
 from utils.style import load_css 
-# from streamlit_autorefresh import st_autorefresh
+from streamlit_autorefresh import st_autorefresh
+
+st.set_page_config(page_title="Delivery Confirm System",page_icon="🥡",layout="wide",initial_sidebar_state="collapsed")
+load_css()
 
 # Get all confirmed orders (order_status = 12)
 def get_open_orders():
@@ -92,17 +95,6 @@ def display_order(order, items):
 
 # Main Delivery page
 def show_delivery_page():
-    st.set_page_config(
-        page_title="Delivery Confirm System",
-        page_icon="🥡",
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
-    
-    load_css()
-    
-    # st.title("🥡 Delivery Confirm System")
-    # st.markdown("---")
 
     # Get open orders
     orders = get_open_orders()

@@ -6,6 +6,9 @@ from utils.database import get_db_connection
 from utils.style import load_css 
 from streamlit_autorefresh import st_autorefresh
 
+st.set_page_config(page_title="Kitchen Display System", page_icon="🍳", layout="wide", initial_sidebar_state="collapsed")
+load_css()
+
 # Initialize session state
 def init_session_state():
     if 'item_states' not in st.session_state:
@@ -163,10 +166,8 @@ def display_order_with_checkboxes(order, items):
 
 # Main KDS page
 def show_kds_page():
-    st.set_page_config(page_title="Kitchen Display System", page_icon="🍳", layout="wide", initial_sidebar_state="collapsed")
-    init_session_state()
-    load_css()
 
+    init_session_state()
     orders = get_open_orders()
 
     # Detect new orders

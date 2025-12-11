@@ -4,6 +4,10 @@ from utils.util import format_price
 from utils.database import get_db_connection
 from utils.style import load_css
 
+# Page layout
+st.set_page_config(page_title="Orders", page_icon="🗒", layout="wide", initial_sidebar_state="collapsed")
+load_css()
+
 # Initialize session state for cart
 if 'cart' not in st.session_state:
     st.session_state.cart = []
@@ -142,17 +146,6 @@ def create_order():
         conn.close()
 
 def show_order_page():
-    # Page layout
-    st.set_page_config(
-        page_title="Orders", 
-        page_icon="🗒",
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
-    load_css()
-
-    # st.title("🗒 Orders")
-    # st.markdown("---")
 
     # Create two columns
     col_cart, col_menu = st.columns([1, 2])
