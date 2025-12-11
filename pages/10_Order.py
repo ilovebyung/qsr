@@ -146,7 +146,8 @@ def show_order_page():
     st.set_page_config(
         page_title="Orders", 
         page_icon="🗒",
-        layout="wide"
+        layout="wide",
+        initial_sidebar_state="collapsed"
     )
     load_css()
 

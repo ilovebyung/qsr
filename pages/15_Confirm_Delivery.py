@@ -95,7 +95,8 @@ def show_delivery_page():
     st.set_page_config(
         page_title="Delivery Confirm System",
         page_icon="🥡",
-        layout="wide"
+        layout="wide",
+        initial_sidebar_state="collapsed"
     )
     
     load_css()

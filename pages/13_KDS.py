@@ -163,7 +163,7 @@ def display_order_with_checkboxes(order, items):
 
 # Main KDS page
 def show_kds_page():
-    st.set_page_config(page_title="Kitchen Display System", page_icon="🍳", layout="wide")
+    st.set_page_config(page_title="Kitchen Display System", page_icon="🍳", layout="wide", initial_sidebar_state="collapsed")
     init_session_state()
     load_css()
 

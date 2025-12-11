@@ -108,7 +108,8 @@ def show_checkout_page():
     st.set_page_config(
         page_title="Checkout",
         page_icon="💳",
-        layout="wide"
+        layout="wide",
+        initial_sidebar_state="collapsed"
     )
     load_css()
     initialize_session_state()

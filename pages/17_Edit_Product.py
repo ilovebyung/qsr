@@ -9,7 +9,7 @@ import sqlite3
 from utils.database import update_row, delete_row, get_table_data 
 
 # Page configuration
-st.set_page_config(page_title="Manage Product", page_icon="🛠️", layout="wide")
+st.set_page_config(page_title="Manage Product", page_icon="🛠️", layout="wide", initial_sidebar_state="collapsed")
 # st.title("🛠️ Manage Product")
 # st.markdown("---")
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     # with st.expander("Table Editor (Product & Modifier)", expanded=True):
 
     # Use st.tabs to separate the logic for Product and Modifier
-    tab_Category, tab_Product, tab_Modifier_Group, tab_Modifier = st.tabs(["🥪 Category ","🥪 Product ", "🧂 Modifier Group ", "🧂 Modifier "])
+    tab_Category, tab_Product, tab_Modifier = st.tabs(["🥪 Category ","🥪 Product ", "🧂 Modifier "])  #"🧂 Modifier Group ", 
 
     with tab_Category:
         display_dashboard("Category")
@@ -141,8 +141,8 @@ if __name__ == "__main__":
     with tab_Product:
         display_dashboard("Product")
 
-    with tab_Modifier_Group:
-        display_dashboard("Modifier_Group")
+    # with tab_Modifier_Group:
+    #     display_dashboard("Modifier_Group")
 
     with tab_Modifier:
         display_dashboard("Modifier")

@@ -2,7 +2,11 @@ import streamlit as st
 import os
 
 # Set page config
-st.set_page_config(page_title="Home", page_icon="🏠", layout="wide")
+st.set_page_config(
+    page_title="Home", 
+    page_icon="🏠", 
+    layout="wide",
+    initial_sidebar_state="collapsed") # 👈 collapses sidebar by default
 st.title("🏠 Welcome to QSR Home ")
 
 
