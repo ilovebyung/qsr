@@ -69,4 +69,4 @@ def play_background_audio(file):
     components.html(md, height=0, width=0)
 
 # Implementation
-play_background_audio("assets/ding-dong.mp3")
+# play_background_audio("assets/ding-dong.mp3")
