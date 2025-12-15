@@ -1,8 +1,7 @@
 import streamlit as st
-# from utils.util import format_price
 import pandas as pd
 from datetime import datetime
-from utils.database import  get_db_connection 
+from utils.database import get_db_connection 
 from utils.style import load_css
 
 # Initialize session state
@@ -22,35 +21,55 @@ def get_products():
 def get_modifiers(product_id=None):
     conn = get_db_connection()
     if product_id:
-        query = f"SELECT * FROM Modifier WHERE product_id = {product_id} AND status = 1 order by description"
+        query = f"SELECT * FROM Modifier WHERE product_id = {product_id} AND status = 1 ORDER BY description"
     else:
-        query = "SELECT * FROM Modifier WHERE status = 1 order by description"
+        # query = "SELECT * FROM Modifier WHERE product_id IS NULL AND status = 1 ORDER BY description"
+        query = "SELECT * FROM Modifier WHERE status = 1 GROUP BY description ORDER BY description"
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
 
-# Assign modifier to product
+# Assign modifier to product by creating a new row
 def assign_modifier(modifier_id, product_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE Modifier SET product_id = ? WHERE modifier_id = ?", (product_id, modifier_id))
-    conn.commit()
+    
+    # Get the original modifier details
+    cursor.execute("SELECT description, price FROM Modifier WHERE modifier_id = ?", (modifier_id,))
+    modifier = cursor.fetchone()
+    
+    if modifier:
+        description, price = modifier
+        # Insert a new modifier row with the product_id
+        cursor.execute(
+            "INSERT INTO Modifier (description, product_id, price, status) VALUES (?, ?, ?, 1)",
+            (description, product_id, price)
+        )
+        conn.commit()
+    
     conn.close()
 
-# Unassign modifier from product
-def unassign_modifier(modifier_id):
+# Delete assigned modifier
+def delete_modifier(modifier_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE Modifier SET product_id = NULL WHERE modifier_id = ?", (modifier_id,))
+    cursor.execute("DELETE FROM Modifier WHERE modifier_id = ?", (modifier_id,))
     conn.commit()
     conn.close()
 
 # Main app
-st.set_page_config(page_title="Product Modifier Assignment", page_icon="🧂", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Product Modifier Assignment", 
+    page_icon="🧂", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
+
 # Page layout
 load_css()
 
 st.subheader("🛍️ Assign Modifiers") 
+
 # Layout
 col1, col2, col3 = st.columns([2, 2, 2])
 
@@ -80,7 +99,7 @@ with col2:
         for _, modifier in unassigned_modifiers.iterrows():
             col_a, col_b = st.columns([4, 1])
             with col_a:
-                st.markdown(f"**{modifier['description']}** ")
+                st.markdown(f"**{modifier['description']}**")
             with col_b:
                 if st.session_state.selected_product:
                     if st.button("➡️", key=f"assign_{modifier['modifier_id']}"):
@@ -103,13 +122,11 @@ with col3:
             for _, modifier in assigned_modifiers.iterrows():
                 col_a, col_b = st.columns([4, 1])
                 with col_a:
-                    st.markdown(f"**{modifier['description']}** ")
+                    st.markdown(f"**{modifier['description']}**")
                 with col_b:
                     if st.button("❌", key=f"remove_{modifier['modifier_id']}"):
-                        unassign_modifier(modifier['modifier_id'])
+                        delete_modifier(modifier['modifier_id'])
                         st.success(f"Removed {modifier['description']}")
                         st.rerun()
     else:
         st.info("👈 Select a product to view assigned modifiers")
-
-
