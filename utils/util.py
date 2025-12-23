@@ -79,3 +79,51 @@ def hide_sidebar():
             }
         </style>
     """, unsafe_allow_html=True)
+
+
+def save_receipt_to_file(orders, subtotal, tax=175):
+    """
+    Save receipt content to receipt.txt file
+    
+    Args:
+        orders: Dictionary of order items with modifiers
+        subtotal: Subtotal amount in cents
+        tax: Tax amount in cents (default 175 = $1.75)
+    """
+    try:
+        with open('receipt.txt', 'w', encoding='utf-8') as f:
+            # Header
+            f.write("=" * 50 + "\n")
+            f.write(f"Order: {', '.join(str(k) for k in orders.keys())}\n")
+            f.write("=" * 50 + "\n\n")
+            
+            # Items
+            for order_id, items in orders.items():
+                for item in items:
+                    # Main product line
+                    f.write(f"{item['description']}\n")
+                    f.write(f"  Quantity: {item['quantity']}\n")
+                    f.write(f"  Price: {format_price(item['base_price'])}\n")
+                    
+                    # Modifiers
+                    if item['modifiers']:
+                        f.write(f"  Modifiers:\n")
+                        for mod in item['modifiers']:
+                            f.write(f"    - {mod['description']}: +{format_price(mod['price'])}\n")
+                        f.write(f"  Item Price w/ Modifiers: {format_price(item['base_price'] + item['modifier_total'])}\n")
+                    
+                    f.write(f"  Item Total: {format_price(item['item_total'])}\n")
+                    f.write("-" * 50 + "\n")
+            
+            # Payment summary
+            f.write("\n")
+            f.write(f"Subtotal: {format_price(subtotal)}\n")
+            f.write(f"Tax: {format_price(tax)}\n")
+            f.write("=" * 50 + "\n")
+            f.write(f"TOTAL: {format_price(subtotal + tax)}\n")
+            f.write("=" * 50 + "\n")
+        
+        return True
+    except Exception as e:
+        st.error(f"Error saving receipt: {e}")
+        return False
