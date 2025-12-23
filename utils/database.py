@@ -63,3 +63,60 @@ def delete_row(table_name, row_id_col, row_id):
             cursor.execute(f"DELETE FROM {table_name} WHERE {row_id_col} = ?", (row_id,))
     except Exception as e:
         st.error(f"Error deleting row in Table {table_name}: {e}")
+
+# Get order details with modifiers
+def get_order_details():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get orders with products and their modifiers
+    cursor.execute("""
+        SELECT 
+            oc.order_id,
+            oc.subtotal,
+            op.product_id,
+            op.modifiers,
+            pi.description as product_description,
+            op.product_quantity,
+            pi.price as product_price
+        FROM Order_Cart oc
+        LEFT JOIN Order_Product op ON oc.order_id = op.order_id
+        LEFT JOIN Product pi ON op.product_id = pi.product_id
+        WHERE oc.order_status = 10
+        ORDER BY oc.order_id, pi.description
+    """)
+    
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+# Get modifier details for a list of modifier IDs
+def get_modifiers_details(modifier_ids_str):
+    """
+    Parse modifier IDs string and fetch their details
+    modifier_ids_str: "12,15,18" format
+    Returns: list of dicts with modifier info
+    """
+    if not modifier_ids_str:
+        return []
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    modifier_ids = modifier_ids_str.split(',')
+    placeholders = ','.join(['?' for _ in modifier_ids])
+    
+    cursor.execute(f"""
+        SELECT 
+            modifier_id,
+            description,
+            price
+        FROM Modifier
+        WHERE modifier_id IN ({placeholders})
+        AND status = 1
+    """, modifier_ids)
+    
+    modifiers = cursor.fetchall()
+    conn.close()
+    
+    return [dict(mod) for mod in modifiers]

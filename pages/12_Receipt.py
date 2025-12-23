@@ -5,7 +5,7 @@ from utils.util import format_price
 from utils.database import get_db_connection
 from utils.style import load_css
 
-st.set_page_config(page_title="Orders Display",page_icon="📋",layout="wide",initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Recipt Display",page_icon="📋",layout="wide",initial_sidebar_state="collapsed")
 load_css()
 
 def get_order_details():
@@ -146,6 +146,7 @@ def show_orders_page():
                 })
             
             # Create and display DataFrame
+            st.markdown(f"### Order: {order_id}")
             df = pd.DataFrame(table_data)
             df.reset_index(drop=True)
             st.table(df)

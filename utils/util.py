@@ -68,5 +68,14 @@ def play_background_audio(file):
     """
     components.html(md, height=0, width=0)
 
-# Implementation
-# play_background_audio("assets/ding-dong.mp3")
+# Make sidebar hidden and collapsed
+def hide_sidebar():
+    st.set_page_config(initial_sidebar_state="collapsed")
+    # Completely hide the sidebar
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] {
+                display: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
