@@ -2,26 +2,10 @@ import streamlit as st
 from utils.util import format_price
 from utils.database import  get_db_connection 
 from utils.style import load_css 
-import streamlit as st
-import sqlite3
-import re
-
-# Assuming utils.database contains update_row, delete_row, and get_table_data
-from utils.database import update_row, delete_row, get_table_data 
 
 # Page configuration
 st.set_page_config(page_title="Manage Product", page_icon="🛠️", layout="wide", initial_sidebar_state="collapsed")
 
-
-# Utility functions
-# def format_price(cents):
-#     return f"${cents / 100:.2f}"
-
-# def get_db_connection():
-#     conn = sqlite3.connect('pos.database', detect_types=sqlite3.PARSE_DECLTYPES)
-#     conn.row_factory = sqlite3.Row
-#     conn.execute('PRAGMA journal_mode=WAL;')
-#     return conn
 
 def parse_price(price_str):
     """Convert price string like $5.99 to cents (599)"""
@@ -45,16 +29,16 @@ def get_categories():
     conn.close()
     return categories
 
-def insert_category(description):
+def insert_category(description, status):
     conn = get_db_connection()
-    conn.execute('INSERT INTO Category (description) VALUES (?)', (description,))
+    conn.execute('INSERT INTO Category (description, status) VALUES (?, ?)', (description, status))
     conn.commit()
     conn.close()
 
-def update_category(category_id, description):
+def update_category(category_id, description, status):
     conn = get_db_connection()
-    conn.execute('UPDATE Category SET description = ? WHERE category_id = ?', 
-                 (description, category_id))
+    conn.execute('UPDATE Category SET description = ?, status = ? WHERE category_id = ?', 
+                 (description, status, category_id))
     conn.commit()
     conn.close()
 
@@ -137,8 +121,9 @@ def delete_modifier(modifier_id):
 # Main App
 def display_dashboard():
     st.subheader("🛍️ Manage Products, Categories, and Modifiers") 
+    load_css()
     # Category Management
-    with st.expander(" Category Management", expanded=True):
+    with st.expander("📁 Category Management", expanded=True):
         col1, col2 = st.columns([2, 1])
         
         with col1:
@@ -147,7 +132,9 @@ def display_dashboard():
             if categories:
                 for cat in categories:
                     cols = st.columns([3, 1, 1])
-                    cols[0].write(f"**{cat['description']}** (ID: {cat['category_id']})")
+                    status_icon = "✅" if cat['status'] == 1 else "❌"
+                    cols[0].write(f"**{cat['description']}** {status_icon}")
+                    # cols[0].caption(f"ID: {cat['category_id']}")
                     if cols[1].button("Edit", key=f"edit_cat_{cat['category_id']}"):
                         st.session_state[f"edit_category_{cat['category_id']}"] = True
                     if cols[2].button("Delete", key=f"del_cat_{cat['category_id']}"):
@@ -157,10 +144,13 @@ def display_dashboard():
                     if st.session_state.get(f"edit_category_{cat['category_id']}", False):
                         with st.form(key=f"form_edit_cat_{cat['category_id']}"):
                             new_desc = st.text_input("Description", value=cat['description'])
+                            new_status = st.selectbox("Status", options=[1, 0], 
+                                                     format_func=lambda x: "Available" if x == 1 else "Not Available",
+                                                     index=0 if cat['status'] == 1 else 1)
                             col_a, col_b = st.columns(2)
                             if col_a.form_submit_button("Update"):
                                 if new_desc:
-                                    update_category(cat['category_id'], new_desc)
+                                    update_category(cat['category_id'], new_desc, new_status)
                                     st.session_state[f"edit_category_{cat['category_id']}"] = False
                                     st.success("Category updated!")
                                     st.rerun()
@@ -174,16 +164,18 @@ def display_dashboard():
             st.subheader("Add Category")
             with st.form(key="add_category"):
                 cat_desc = st.text_input("Description")
+                cat_status = st.selectbox("Status", options=[1, 0], 
+                                         format_func=lambda x: "Available" if x == 1 else "Not Available")
                 if st.form_submit_button("Add Category"):
                     if cat_desc:
-                        insert_category(cat_desc)
+                        insert_category(cat_desc, cat_status)
                         st.success("Category added!")
                         st.rerun()
                     else:
                         st.error("Description is required")
     
     # Product Management
-    with st.expander(" Product Management"):
+    with st.expander("📦 Product Management"):
         col1, col2 = st.columns([2, 1])
         
         with col1:
@@ -194,7 +186,7 @@ def display_dashboard():
                     cols = st.columns([3, 1, 1])
                     status_icon = "✅" if prod['status'] == 1 else "❌"
                     cols[0].write(f"**{prod['description']}** {status_icon}")
-                    cols[0].caption(f"Category: {prod['category_name'] or 'None'} | Price: {format_price(prod['price'])} | Tax: {prod['tax']}% | ID: {prod['product_id']}")
+                    cols[0].caption(f"Category: {prod['category_name'] or 'None'} | Price: {format_price(prod['price'])} | Tax: {prod['tax']}% ") #| ID: {prod['product_id']}")
                     if cols[1].button("Edit", key=f"edit_prod_{prod['product_id']}"):
                         st.session_state[f"edit_product_{prod['product_id']}"] = True
                     if cols[2].button("Delete", key=f"del_prod_{prod['product_id']}"):
@@ -252,7 +244,7 @@ def display_dashboard():
                         st.error("Invalid input. Description required and price must be non-negative.")
     
     # Modifier Management
-    with st.expander(" Modifier Management"):
+    with st.expander("🔧 Modifier Management"):
         col1, col2 = st.columns([2, 1])
         
         with col1:
@@ -263,7 +255,7 @@ def display_dashboard():
                     cols = st.columns([3, 1, 1])
                     status_icon = "✅" if mod['status'] == 1 else "❌"
                     cols[0].write(f"**{mod['description']}** {status_icon}")
-                    cols[0].caption(f"Product: {mod['product_name'] or 'None'} | Price: {format_price(mod['price'])} | ID: {mod['modifier_id']}")
+                    cols[0].caption(f"Product: {mod['product_name'] or 'None'} | Price: {format_price(mod['price'])}") # | ID: {mod['modifier_id']}")
                     if cols[1].button("Edit", key=f"edit_mod_{mod['modifier_id']}"):
                         st.session_state[f"edit_modifier_{mod['modifier_id']}"] = True
                     if cols[2].button("Delete", key=f"del_mod_{mod['modifier_id']}"):
