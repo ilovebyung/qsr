@@ -19,7 +19,7 @@ def get_category():
     """Get all categories"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT category_id, description FROM category ORDER BY category_id")
+    cursor.execute("SELECT category_id, description FROM category WHERE status = 1 ORDER BY category_id")
     groups = cursor.fetchall()
     conn.close()
     return groups
