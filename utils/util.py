@@ -80,7 +80,7 @@ def hide_sidebar():
         </style>
     """, unsafe_allow_html=True)
 
-
+# Save receipt to file -> Print Receipt Page
 def save_receipt_to_file(orders, subtotal, tax=175):
     """
     Save receipt content to receipt.txt file
