@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
-from utils.util import format_price, save_receipt_to_file 
-from utils.database import get_db_connection, get_order_details
-from utils.style import load_css 
+from utils.util import format_price, save_receipt_to_file
+from utils.database import get_db_connection, get_order_details, get_modifiers_details 
 
-st.set_page_config(page_title="Checkout",page_icon="💳",layout="wide",initial_sidebar_state="collapsed")
-load_css()
 
 def settle_order(order_ids, total):
     conn = get_db_connection()
@@ -26,19 +23,6 @@ def settle_order(order_ids, total):
         return False
     finally:
         conn.close()
-
-def handle_calculator_input(value):
-    if value == "delete":
-        st.session_state.current_input = st.session_state.current_input[:-1]
-    elif value == "enter":
-        if st.session_state.current_input:
-            st.session_state.amount_tendered = int(float(st.session_state.current_input) * 100)
-            st.session_state.current_input = ""
-    elif value in [".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-        st.session_state.current_input += value
-    elif value.startswith("$"):
-        amount = value[1:]
-        st.session_state.amount_tendered = int(float(amount) * 100)
 
 def initialize_session_state():
     if 'selected_service_area' not in st.session_state:
@@ -116,10 +100,13 @@ def show_checkout_page():
 
         # Create DataFrame
         df = pd.DataFrame(table_data)
-        
-        # Display as table
-        st.table(df.set_index(df.columns[0]))
-        
+
+        # Display as table only if there's data
+        if not df.empty:
+            st.table(df.set_index(df.columns[0]))
+        else:
+            st.info("No items in the order.")
+                
         # Payment Section    
         TAX = 175  # $1.75
         
@@ -140,16 +127,13 @@ def show_checkout_page():
         balance_due = subtotal + TAX
         remaining_balance = balance_due - st.session_state.amount_tendered
         
-        # COLUMN 2: NUMBER PAD
+        # COLUMN 2: BALANCE DUE
         with col2:
-            st.markdown(f"""
-            <div class="balance-header">Remaining Balance / Change Due</div>
-            <div class="balance-amount">{format_price(remaining_balance)}</div>            
+            st.markdown(f"""BALANCE DUE          
             """, unsafe_allow_html=True)
         
-        # COLUMN 3: PAYMENT & SPLIT
+        # COLUMN 3:   
         with col3:
-            # st.markdown("### Payment Type")
             # Add a button to save receipt
             if st.button("Save Receipt"):
                 if save_receipt_to_file(orders, subtotal, TAX):
