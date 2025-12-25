@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from utils.util import format_price, save_receipt_to_file 
-from utils.database import get_db_connection, get_order_details, get_modifiers_details
+from utils.database import get_db_connection, get_order_details
 from utils.style import load_css 
 
 st.set_page_config(page_title="Checkout",page_icon="💳",layout="wide",initial_sidebar_state="collapsed")
