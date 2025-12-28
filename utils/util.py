@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import base64
 import datetime
+import socket
 
 # # Format price from integer to dollar format
 # def format_price(price_cents):
@@ -80,49 +81,54 @@ def hide_sidebar():
         </style>
     """, unsafe_allow_html=True)
 
-# Save receipt to file -> Print Receipt Page
-def save_receipt_to_file(orders, subtotal, tax=175):
-    """
-    Save receipt content to receipt.txt file
-    
-    Args:
-        orders: Dictionary of order items with modifiers
-        subtotal: Subtotal amount in cents
-        tax: Tax amount in cents (default 175 = $1.75)
-    """
+
+# Printer IP and port
+PRINTER_IP = "192.168.0.41"
+PRINTER_PORT = 9100  # Standard raw printing port
+
+def print_receipt(orders, subtotal, tax=175):
     try:
-        with open('receipt.txt', 'w', encoding='utf-8') as f:
-            # Header
-            f.write("=" * 50 + "\n")
-            f.write(f"Order: {', '.join(str(k) for k in orders.keys())}\n")
-            f.write("=" * 50 + "\n\n")
-            
-            # Items
-            for order_id, items in orders.items():
-                for item in items:
-                    # Main product line
-                    f.write(f"{item['description']}\n")
-                    f.write(f"  Quantity: {item['quantity']}\n")
-                    f.write(f"  Price: {format_price(item['base_price'])}\n")
-                    
-                    # Modifiers
-                    if item['modifiers']:
-                        f.write(f"  Modifiers:\n")
-                        for mod in item['modifiers']:
-                            f.write(f"    - {mod['description']}: +{format_price(mod['price'])}\n")
-                        f.write(f"  Item Price w/ Modifiers: {format_price(item['base_price'] + item['modifier_total'])}\n")
-                    
-                    f.write(f"  Item Total: {format_price(item['item_total'])}\n")
-                    f.write("-" * 50 + "\n")
+        # Connect to printer
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((PRINTER_IP, PRINTER_PORT))
+        receipt_lines = []
+        
+        # Items
+        for order_id, items in orders.items():
+            for item in items:
+                # Main product line
+                receipt_lines.append(f"{item['description']}\n")
+                receipt_lines.append(f"  Quantity: {item['quantity']}\n")
+                receipt_lines.append(f"  Price: {format_price(item['base_price'])}\n")
+                
+                # Modifiers
+                if item['modifiers']:
+                    receipt_lines.append("  Modifiers:\n")
+                    for mod in item['modifiers']:
+                        receipt_lines.append(f"    - {mod['description']}: +{format_price(mod['price'])}\n")
+                    receipt_lines.append(
+                        f"  Item Price w/ Modifiers: {format_price(item['base_price'] + item['modifier_total'])}\n"
+                    )
+                
+                receipt_lines.append(f"  Item Total: {format_price(item['item_total'])}\n")
+                receipt_lines.append("-" * 50 + "\n")
             
             # Payment summary
-            f.write("\n")
-            f.write(f"Subtotal: {format_price(subtotal)}\n")
-            f.write(f"Tax: {format_price(tax)}\n")
-            f.write("=" * 50 + "\n")
-            f.write(f"TOTAL: {format_price(subtotal + tax)}\n")
-            f.write("=" * 50 + "\n")
+            receipt_lines.append("\n")
+            receipt_lines.append(f"Subtotal: {format_price(subtotal)}\n")
+            receipt_lines.append(f"Tax: {format_price(tax)}\n")
+            receipt_lines.append("=" * 50 + "\n")
+            receipt_lines.append(f"TOTAL: {format_price(subtotal + tax)}\n")
+            receipt_lines.append("=" * 50 + "\n")
         
+        # Convert to bytes
+        receipt_data = "".join(receipt_lines).encode("utf-8")
+        
+        # Send receipt data
+        sock.sendall(receipt_data)
+        
+        # Cut paper command (ESC/POS)
+        sock.sendall(b"\x1dV\x00")    
         return True
     except Exception as e:
         st.error(f"Error saving receipt: {e}")
