@@ -184,7 +184,7 @@ def show_order_page():
                     with cart_col3:
                         st.write(format_price(item['price'] * item['quantity']))
                     
-                    st.divider()
+                    # st.divider()
         else:
             st.info("Cart is empty")
 

@@ -134,10 +134,10 @@ def show_checkout_page():
         
         # COLUMN 3:   
         with col3:
-            # Add a button to save receipt
-            if st.button("Save Receipt"):
+            # Add a button to print receipt
+            if st.button("Print Receipt"):
                 if print_receipt(orders, subtotal, TAX):
-                    st.success("Receipt saved to receipt.txt")
+                    st.success("printing successfully.")
             
  
 
