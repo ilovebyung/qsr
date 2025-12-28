@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.util import format_price, save_receipt_to_file
+from utils.util import format_price, print_receipt
 from utils.database import get_db_connection, get_order_details, get_modifiers_details 
 
 
@@ -136,7 +136,7 @@ def show_checkout_page():
         with col3:
             # Add a button to save receipt
             if st.button("Save Receipt"):
-                if save_receipt_to_file(orders, subtotal, TAX):
+                if print_receipt(orders, subtotal, TAX):
                     st.success("Receipt saved to receipt.txt")
             
  

@@ -303,7 +303,7 @@ def show_order_page():
                                 add_to_cart(product_id, product_name, price, selected_modifiers)
                                 st.rerun()
                             
-                            st.divider()
+                            # st.divider()
 
 # Run the page
 if __name__ == "__main__":
