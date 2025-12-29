@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.util import format_price, calculate_split_amounts, print_receipt 
+from utils.util import format_price, calculate_split_amounts #, print_receipt 
 from utils.database import get_db_connection, get_order_details, get_modifiers_details
 from utils.style import load_css 
 
