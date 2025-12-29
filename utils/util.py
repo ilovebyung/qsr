@@ -49,8 +49,7 @@ def calculate_split_amounts(total, split_count):
     
     return amounts
 
-
-
+# Play background audio
 def play_background_audio(file):
     with open(file, "rb") as f:
         data = f.read()
@@ -86,7 +85,7 @@ def hide_sidebar():
 PRINTER_IP = "192.168.0.41"
 PRINTER_PORT = 9100  # Standard raw printing port
 
-def print_receipt(orders, subtotal, tax=175):
+def print_receipt(orders, subtotal, tax=45):
     try:
         # Connect to printer
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -118,9 +117,7 @@ def print_receipt(orders, subtotal, tax=175):
             receipt_lines.append(f"Subtotal: {format_price(subtotal)}\n")
             receipt_lines.append(f"Tax: {format_price(tax)}\n")
             receipt_lines.append("=" * 50 + "\n")
-            receipt_lines.append(f"TOTAL: {format_price(subtotal + tax)}\n")
-            receipt_lines.append("=" * 50 + "\n")
-        
+     
         # Convert to bytes
         receipt_data = "".join(receipt_lines).encode("utf-8")
         
