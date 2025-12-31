@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.util import format_price, calculate_split_amounts #, print_receipt  
+from utils.util import format_price, calculate_split_amounts , print_receipt
 from utils.database import get_db_connection, get_order_details, get_modifiers_details
 from utils.style import load_css 
 
@@ -238,17 +238,22 @@ def show_checkout_page():
                     st.success("Order settled successfully!")
                     st.switch_page("pages/10_Order.py")
 
-            # Settle Button
-            if st.button("Settle with receipt", key="settle_receipt", use_container_width=True, type="primary"):
-                total = subtotal + TAX
-                
-                if settle_order(list(orders.keys()), total):
-                    st.session_state.amount_tendered = 0
-                    st.session_state.current_input = ""
-                    st.session_state.split_count = 1
+            # # Print Button
+            # if st.button("Settle with receipt", key="settle_receipt", use_container_width=True, type="primary"):
+            #     total = subtotal + TAX
+
+            # Add a button to print receipt
+            if st.button("Print Receipt", key="receipt", use_container_width=True, type="primary"):
+                if print_receipt(orders, subtotal, TAX):
+                    st.success("printing successfully.")
+
+                # if settle_order(list(orders.keys()), total):
+                #     st.session_state.amount_tendered = 0
+                #     st.session_state.current_input = ""
+                #     st.session_state.split_count = 1
                     
-                    st.success("Order settled successfully!")
-                    st.switch_page("pages/10_Order.py")
+                #     st.success("Order settled successfully!")
+                #     st.switch_page("pages/10_Order.py")
 
 if __name__ == "__main__":
     show_checkout_page()
