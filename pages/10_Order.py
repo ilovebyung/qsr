@@ -237,7 +237,7 @@ def show_order_page():
                     # Display product items
                     for product_id, product_name, price in product_items:
                         with st.container():
-                            st.write(f"**{product_name}** - {format_price(price)}")
+                            st.write(f"**{product_name}**: {format_price(price)}")
                             
                             # Get modifier groups for this product
                             modifier_groups = get_modifiers(product_id)
