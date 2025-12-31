@@ -123,5 +123,5 @@ def show_delivery_page():
 # Run the page
 if __name__ == "__main__":
     # Note: The st_autorefresh function is set to refresh the page every 10 seconds to keep the KDS updated.
-    # st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
+    st_autorefresh(interval=10 * 1000, limit=None, key="refresh")
     show_delivery_page()

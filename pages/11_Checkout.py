@@ -1,68 +1,11 @@
 import streamlit as st
 import pandas as pd
-from utils.util import format_price, calculate_split_amounts #, print_receipt 
+from utils.util import format_price, calculate_split_amounts #, print_receipt  
 from utils.database import get_db_connection, get_order_details, get_modifiers_details
 from utils.style import load_css 
 
 st.set_page_config(page_title="Checkout",page_icon="💳",layout="wide",initial_sidebar_state="collapsed")
 load_css()
-
-# # Get order details with modifiers
-# def get_order_details():
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-    
-#     # Get orders with products and their modifiers
-#     cursor.execute("""
-#         SELECT 
-#             oc.order_id,
-#             oc.subtotal,
-#             op.product_id,
-#             op.modifiers,
-#             pi.description as product_description,
-#             op.product_quantity,
-#             pi.price as product_price
-#         FROM Order_Cart oc
-#         LEFT JOIN Order_Product op ON oc.order_id = op.order_id
-#         LEFT JOIN Product pi ON op.product_id = pi.product_id
-#         WHERE oc.order_status = 10
-#         ORDER BY oc.order_id, pi.description
-#     """)
-    
-#     results = cursor.fetchall()
-#     conn.close()
-#     return results
-
-# # Get modifier details for a list of modifier IDs
-# def get_modifiers_details(modifier_ids_str):
-#     """
-#     Parse modifier IDs string and fetch their details
-#     modifier_ids_str: "12,15,18" format
-#     Returns: list of dicts with modifier info
-#     """
-#     if not modifier_ids_str:
-#         return []
-    
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-    
-#     modifier_ids = modifier_ids_str.split(',')
-#     placeholders = ','.join(['?' for _ in modifier_ids])
-    
-#     cursor.execute(f"""
-#         SELECT 
-#             modifier_id,
-#             description,
-#             price
-#         FROM Modifier
-#         WHERE modifier_id IN ({placeholders})
-#         AND status = 1
-#     """, modifier_ids)
-    
-#     modifiers = cursor.fetchall()
-#     conn.close()
-    
-#     return [dict(mod) for mod in modifiers]
 
 def settle_order(order_ids, total):
     conn = get_db_connection()
@@ -262,7 +205,7 @@ def show_checkout_page():
             split_col1, split_col2, split_col3 = st.columns([1, 2, 1])
             
             with split_col1:
-                if st.button("➖", key="split_minus", use_container_width=True):
+                if st.button("🔻", key="split_minus", use_container_width=True):    #➖
                     if st.session_state.split_count > 1:
                         st.session_state.split_count -= 1
                         st.rerun()
@@ -271,7 +214,7 @@ def show_checkout_page():
                 st.markdown(f"<div style='text-align: center; padding: 1.5rem; font-weight: bold; font-size: 18px;'>{st.session_state.split_count}</div>", unsafe_allow_html=True)
 
             with split_col3:
-                if st.button("➕", key="split_plus", use_container_width=True):
+                if st.button("🔺", key="split_plus", use_container_width=True):   #➕
                     st.session_state.split_count += 1
                     st.rerun()
             

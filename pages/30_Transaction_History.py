@@ -8,9 +8,6 @@ from utils.style import load_css
 
 # Page configuration
 st.set_page_config(page_title="Transaction History", page_icon="📑", layout="wide")
-# st.title("📑 Transaction History")
-# st.markdown("---")
-
 
 def get_transaction_data(start_date, end_date):
     """Fetch transaction data for the selected date range"""
@@ -27,7 +24,7 @@ def get_transaction_data(start_date, end_date):
                 WHEN 12 THEN 'order confirmed'
                 WHEN 13 THEN 'order delivered'
                 WHEN 14 THEN 'order settled'
-                ELSE 'unknown'
+                ELSE 'other'
             END AS order_status,
             oh.timestamp,
             -- pi.product_id,
@@ -123,22 +120,22 @@ if st.sidebar.button("Refresh Data", type="primary"):
     st.cache_data.clear()
 
 # Get and display summary statistics
-st.subheader(" Summary Statistics")
-summary = get_summary_data(start_date, end_date)
+# st.subheader(" Summary Statistics")
+# summary = get_summary_data(start_date, end_date)
 
-if summary:
-    col1, col2, col3, col4 = st.columns(4)
+# if summary:
+#     col1, col2, col3, col4 = st.columns(4)
     
-    with col1:
-        st.metric("Total Orders", summary['total_orders'])
-    with col2:
-        st.metric("Total Items", summary['total_items'])
-    with col3:
-        st.metric("Total Quantity", summary['total_quantity'])
-    with col4:
-        st.metric("Total Revenue", format_price(summary['total_revenue']))
+#     with col1:
+#         st.metric("Total Orders", summary['total_orders'])
+#     with col2:
+#         st.metric("Total Items", summary['total_items'])
+#     with col3:
+#         st.metric("Total Quantity", summary['total_quantity'])
+#     with col4:
+#         st.metric("Total Revenue", format_price(summary['total_revenue']))
 
-st.divider()
+# st.divider()
 
 # Get transaction data
 st.subheader(" Transaction Details")

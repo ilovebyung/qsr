@@ -68,7 +68,7 @@ st.set_page_config(
 # Page layout
 load_css()
 
-st.subheader("🛍️ Assign Modifiers") 
+st.subheader("Assign Modifiers") 
 
 # Layout
 col1, col2, col3 = st.columns([2, 2, 2])

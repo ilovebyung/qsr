@@ -171,13 +171,13 @@ def show_order_page():
                     with cart_col2:
                         quantity_col1, quantity_col2, quantity_col3 = st.columns([1, 1, 1])
                         with quantity_col1:
-                            if st.button("➖", key=f"dec_{i}", help="Decrease quantity"):
+                            if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):   #➖
                                 update_quantity(i, -1)
                                 st.rerun()
                         with quantity_col2:
                             st.write(f"{item['quantity']}")
                         with quantity_col3:
-                            if st.button("➕", key=f"inc_{i}", help="Increase quantity"):
+                            if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):   #➕
                                 update_quantity(i, 1)
                                 st.rerun()
                     
