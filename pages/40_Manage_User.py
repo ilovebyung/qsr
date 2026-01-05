@@ -1,15 +1,21 @@
 import streamlit as st
 import yaml
 from yaml.loader import SafeLoader
+from utils.style import load_css
 
+# Page configuration
+st.set_page_config(page_title="Register User", page_icon="👥", initial_sidebar_state="collapsed")
+load_css()
+
+credeintials_file_path = './.streamlit/credentials.yaml'
 # Read the credentials file
 def load_credentials():
-    with open('credentials.yaml') as file:
+    with open(credeintials_file_path) as file:
         return yaml.load(file, Loader=SafeLoader)
 
 # Save credentials to file
 def save_credentials(config):
-    with open('credentials.yaml', 'w') as file:
+    with open(credeintials_file_path, 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
 
 # Load config
@@ -23,7 +29,7 @@ st.subheader("Add New User")
 with st.form("add_user_form"):
     username = st.text_input("Username*")
     email = st.text_input("Email*")
-    password = st.text_input("Password*", type="password")
+    password = st.text_input("Password*")
     first_name = st.text_input("First Name*")
     last_name = st.text_input("Last Name*")
     roles = st.text_input("Roles", value="viewer")
@@ -127,3 +133,4 @@ if 'editing_user' in st.session_state:
         if cancel:
             del st.session_state.editing_user
             st.rerun()
+
