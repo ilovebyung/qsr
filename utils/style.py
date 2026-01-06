@@ -114,3 +114,15 @@ def load_css():
     }
     </style>
     """, unsafe_allow_html=True)
+
+# Make sidebar hidden and collapsed
+def hide_sidebar():
+    st.set_page_config(initial_sidebar_state="collapsed")
+    # Completely hide the sidebar
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] {
+                display: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
