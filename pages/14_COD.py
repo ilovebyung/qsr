@@ -91,14 +91,14 @@ def show_cod_page():
     # Left column: In Preparation (status 12 confirmed)
     with left_col:
         st.markdown("### 🍳 In Preparation")
-        prep_orders = get_orders_by_status(12)
-        display_orders_column(prep_orders, 12, "")
+        prep_orders = get_orders_by_status(11)
+        display_orders_column(prep_orders, 11, "")
     
     # Right column: Ready for Pickup (status 13 delivered)
     with right_col:
         st.markdown("### 🛍️ Ready for Pickup")
-        ready_orders = get_orders_by_status(13)
-        display_orders_column(ready_orders, 13, "")
+        ready_orders = get_orders_by_status(12)
+        display_orders_column(ready_orders, 12, "")
     
     # Footer with last updated time
     st.markdown("---")

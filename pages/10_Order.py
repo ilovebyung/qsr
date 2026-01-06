@@ -120,9 +120,9 @@ def create_order():
     try:
         # Create order in Order_Cart
         cursor.execute('''
-            INSERT INTO Order_Cart (service_area_id, order_status, provided_name, note)
-            VALUES (0, 10, ?, ?)
-        ''', (st.session_state.provided_name, st.session_state.note))
+            INSERT INTO Order_Cart (service_area_id, order_status, username, provided_name, note)
+            VALUES (0, 10, ?, ?, ?)
+        ''', (st.session_state.get('username'), st.session_state.provided_name, st.session_state.note))
         order_id = cursor.lastrowid
         st.session_state.order_id = order_id
         

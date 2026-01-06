@@ -20,12 +20,13 @@ def get_transaction_data(start_date, end_date):
         SELECT 
             oh.order_id,
             CASE oh.order_status
-                WHEN 11 THEN 'order created'
-                WHEN 12 THEN 'order confirmed'
+                WHEN 10 THEN 'order created'
+                WHEN 11 THEN 'order paid'
+                WHEN 12 THEN 'order confirmed by kitchen'
                 WHEN 13 THEN 'order delivered'
-                WHEN 14 THEN 'order settled'
                 ELSE 'other'
             END AS order_status,
+            oh.username,
             oh.timestamp,
             -- pi.product_id,
             pi.description as product_description,
