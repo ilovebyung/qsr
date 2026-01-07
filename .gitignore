@@ -46,7 +46,6 @@ nodeLanguageServer/**
 nodeLanguageServer.*/**
 dist/**
 *.csv
-*.yaml
 # translation files
 *.xlf
 package.nls.*.json
