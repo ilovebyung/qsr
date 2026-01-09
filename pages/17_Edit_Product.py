@@ -202,7 +202,7 @@ def display_dashboard():
                                                        format_func=lambda x: "None" if x is None else cat_options[x],
                                                        index=0 if prod['category_id'] is None else list(cat_options.keys()).index(prod['category_id']) + 1)
                             new_price = st.text_input("Price (e.g., $5.99)", value=format_price(prod['price']))
-                            new_tax = st.number_input("Tax %", value=prod['tax'], min_value=0)
+                            new_tax = st.number_input("Tax %", value=float(prod['tax']), min_value=0.0, step=0.001,format="%.3f")
                             new_status = st.selectbox("Status", options=[1, 0], 
                                                      format_func=lambda x: "Available" if x == 1 else "Not Available",
                                                      index=0 if prod['status'] == 1 else 1)
@@ -231,7 +231,7 @@ def display_dashboard():
                 selected_cat = st.selectbox("Category", options=[None] + list(cat_options.keys()),
                                            format_func=lambda x: "None" if x is None else cat_options[x])
                 prod_price = st.text_input("Price (e.g., $5.99)")
-                prod_tax = st.number_input("Tax %", value=4, min_value=0)
+                prod_tax = st.number_input("Tax %", value=float(4.712), min_value=0.0, format="%.3f")
                 prod_status = st.selectbox("Status", options=[1, 0], 
                                           format_func=lambda x: "Available" if x == 1 else "Not Available")
                 if st.form_submit_button("Add Product"):
