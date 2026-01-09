@@ -32,7 +32,11 @@ with st.form("add_user_form"):
     password = st.text_input("Password*")
     first_name = st.text_input("First Name*")
     last_name = st.text_input("Last Name*")
-    roles = st.text_input("Roles", value="viewer")
+    # roles = st.text_input("Roles", value="viewer")
+    roles = st.selectbox(
+    "Roles",
+    ("cashier", "manager", "admin", "KDS", "COD"),
+    )
     
     submit = st.form_submit_button("Add User")
     
@@ -104,8 +108,12 @@ if 'editing_user' in st.session_state:
         new_password = st.text_input("Password*", value=current_user.get('password', ''))
         new_first_name = st.text_input("First Name*", value=current_user.get('first_name', ''))
         new_last_name = st.text_input("Last Name*", value=current_user.get('last_name', ''))
-        new_roles = st.text_input("Roles", value=current_user.get('roles', 'viewer'))
-        
+        # new_roles = st.text_input("Roles", value=current_user.get('roles', 'cashier'))
+        new_roles = st.selectbox(
+            "Roles",
+            ("cashier", "manager", "admin", "KDS", "COD"),
+        )
+
         col1, col2 = st.columns(2)
         with col1:
             update_submit = st.form_submit_button("Update User")
