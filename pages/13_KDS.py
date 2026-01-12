@@ -119,7 +119,7 @@ def create_item_key(order_id, product_id, modifiers, index):
 
 # Display order
 def display_order_with_checkboxes(order, items):
-    st.subheader(f'Order: {order["order_id"]}')
+    st.subheader(f'Order: {order["order_id"]%100}')
     if order['note'] and str(order['note']).strip():
         st.info(f"📝 Note: {order['note']}")
     all_checked = True

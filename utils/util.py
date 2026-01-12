@@ -114,6 +114,7 @@ def print_receipt(orders, subtotal, tax=45):
             
             # Payment summary
             receipt_lines.append("\n")
+            receipt_lines.append(f"Order ID: {'order_id'}%100 \n")
             receipt_lines.append(f"Subtotal: {format_price(subtotal)}\n")
             receipt_lines.append(f"Tax: {format_price(tax)}\n")
             receipt_lines.append("=" * 50 + "\n")

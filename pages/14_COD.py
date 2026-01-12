@@ -73,7 +73,7 @@ def display_orders_column(orders, status, title):
             
             if items:  # Only display if order has items
                 with st.container():
-                    st.markdown(f"### Order: {order['order_id']} &nbsp; {order['provided_name']}")
+                    st.markdown(f"### Order: {order['order_id']%100} &nbsp; {order['provided_name']}")
                     
                     # Display items
                     # for item in items:
