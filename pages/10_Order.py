@@ -145,8 +145,94 @@ def create_order():
     finally:
         conn.close()
 
-def show_order_page():
+@st.dialog("Customize Your Order")
+def show_modifier_dialog():
+    """Dialog to show and select modifiers for a product"""
+    if 'selected_product' not in st.session_state or not st.session_state.selected_product:
+        return
+        
+    product = st.session_state.selected_product
+    product_id = product['product_id']
+    product_name = product['product_name']
+    price = product['price']
+    
+    st.write(f"**{product_name}**")
+    st.write(f"Base Price: {format_price(price)}")
+    st.divider()
+    
+    # Get modifier groups for this product
+    modifier_groups = get_modifiers(product_id)
+    
+    # Display modifier groups
+    if modifier_groups:
+        for group_id, group_data in modifier_groups.items():
+            group_desc = group_data['group_description'] or "Modifiers"
+            modifiers = group_data['modifiers']
+            
+            if group_id == 0:
+                # Checkbox for group_id = 0 (multiple selection)
+                st.write(f"**{group_desc}**")
+                for modifier in modifiers:
+                    mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
+                    checkbox_key = f"dialog_check_{product_id}_{modifier['modifier_id']}"
+                    st.checkbox(
+                        f"{modifier['description']}{mod_price}",
+                        key=checkbox_key
+                    )
+            else:
+                # Radio button for group_id != 0 (single selection)
+                st.write(f"**{group_desc}**")
+                radio_options = ["None"] + [
+                    f"{mod['description']}" + (f" (+{format_price(mod['price'])})" if mod['price'] > 0 else "")
+                    for mod in modifiers
+                ]
+                radio_key = f"dialog_radio_{product_id}_{group_id}"
+                st.radio(
+                    group_desc,
+                    radio_options,
+                    key=radio_key,
+                    label_visibility="collapsed"
+                )
+            st.write("")
+    
+    # Add to cart button in dialog
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Cancel", use_container_width=True):
+            st.session_state.selected_product = None
+            st.rerun()
+    with col2:
+        if st.button("Add to Cart", type="primary", use_container_width=True):
+            selected_modifiers = []
+            
+            # Collect selected modifiers
+            if modifier_groups:
+                for group_id, group_data in modifier_groups.items():
+                    modifiers = group_data['modifiers']
+                    
+                    if group_id == 0:
+                        # Get checkbox selections (multiple modifiers)
+                        for modifier in modifiers:
+                            checkbox_key = f"dialog_check_{product_id}_{modifier['modifier_id']}"
+                            if st.session_state.get(checkbox_key, False):
+                                selected_modifiers.append(modifier)
+                    else:
+                        # Get radio selection (single modifier per group)
+                        radio_key = f"dialog_radio_{product_id}_{group_id}"
+                        selected_option = st.session_state.get(radio_key, "None")
+                        if selected_option != "None":
+                            # Find the matching modifier
+                            for modifier in modifiers:
+                                mod_label = f"{modifier['description']}" + (f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else "")
+                                if selected_option == mod_label:
+                                    selected_modifiers.append(modifier)
+                                    break
+            
+            add_to_cart(product_id, product_name, price, selected_modifiers)
+            st.session_state.selected_product = None
+            st.rerun()
 
+def show_order_page():
     # Create two columns
     col_cart, col_menu = st.columns([1, 2])
 
@@ -171,20 +257,18 @@ def show_order_page():
                     with cart_col2:
                         quantity_col1, quantity_col2, quantity_col3 = st.columns([1, 1, 1])
                         with quantity_col1:
-                            if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):   #➖
+                            if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):
                                 update_quantity(i, -1)
                                 st.rerun()
                         with quantity_col2:
                             st.write(f"{item['quantity']}")
                         with quantity_col3:
-                            if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):   #➕
+                            if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):
                                 update_quantity(i, 1)
                                 st.rerun()
                     
                     with cart_col3:
                         st.write(format_price(item['price'] * item['quantity']))
-                    
-                    # st.divider()
         else:
             st.info("Cart is empty")
 
@@ -193,15 +277,8 @@ def show_order_page():
             st.session_state.provided_name = ''   
             st.session_state.note = ''  
 
-        # with st.popover("Name"):
         st.session_state.provided_name = st.text_input("Name? 👋")
-
-        # with st.popover("Note"):
         st.session_state.note = st.text_input("Special request? 👋")
-
-        # # Add vertical space to push the Checkout button down
-        # for _ in range(6):
-        #     st.write("")
 
         # Subtotal
         subtotal = calculate_subtotal()
@@ -234,77 +311,23 @@ def show_order_page():
                     # Get product items for this group
                     product_items = get_products(group_id)
                     
-                    # Display product items
-                    for product_id, product_name, price in product_items:
-                        with st.container():
-                            st.write(f"**{product_name}**: {format_price(price)}")
-                            
-                            # Get modifier groups for this product
-                            modifier_groups = get_modifiers(product_id)
-                            
-                            # Display modifier groups
-                            if modifier_groups:
-                                for group_id, group_data in modifier_groups.items():
-                                    # group_desc = group_data['group_description'] or "Options"
-                                    modifiers = group_data['modifiers']
-                                    
-                                    if group_id == 0:
-                                        # Checkbox for group_id = 0 (multiple selection)
-                                        # st.write(f"*{group_desc}:*")
-                                        for modifier in modifiers:
-                                            mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
-                                            checkbox_key = f"check_{product_id}_{modifier['modifier_id']}"
-                                            st.checkbox(
-                                                f"{modifier['description']}{mod_price}",
-                                                key=checkbox_key
-                                            )
-                                    else:
-                                        # Radio button for group_id != 0 (single selection)
-                                        # st.write(f"*{group_desc}:*")
-                                        radio_options = ["None"] + [
-                                            f"{mod['description']}" + (f" (+{format_price(mod['price'])})" if mod['price'] > 0 else "")
-                                            for mod in modifiers
-                                        ]
-                                        radio_key = f"radio_{product_id}_{group_id}"
-                                        st.radio(
-                                            # group_desc,
-                                            radio_options,
-                                            key=radio_key,
-                                            label_visibility="collapsed"
-                                        )
-                            
-                            # Add to cart button
-                            if st.button("Add to Cart", key=f"add_{product_id}", type="secondary", use_container_width=False):
-                                selected_modifiers = []
-                                
-                                # Collect selected modifiers
-                                if modifier_groups:
-                                    for group_id, group_data in modifier_groups.items():
-                                        modifiers = group_data['modifiers']
-                                        
-                                        if group_id == 0:
-                                            # Get checkbox selections (multiple modifiers)
-                                            for modifier in modifiers:
-                                                checkbox_key = f"check_{product_id}_{modifier['modifier_id']}"
-                                                if st.session_state.get(checkbox_key, False):
-                                                    selected_modifiers.append(modifier)
-                                        else:
-                                            # Get radio selection (single modifier per group)
-                                            radio_key = f"radio_{product_id}_{group_id}"
-                                            selected_option = st.session_state.get(radio_key, "None")
-                                            if selected_option != "None":
-                                                # Find the matching modifier
-                                                for modifier in modifiers:
-                                                    mod_label = f"{modifier['description']}" + (f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else "")
-                                                    if selected_option == mod_label:
-                                                        selected_modifiers.append(modifier)
-                                                        break
-                                
-                                add_to_cart(product_id, product_name, price, selected_modifiers)
-                                st.rerun()
-                            
-                            # st.divider()
-
+                    # Display product items in 3 columns
+                    cols = st.columns(3)
+                    for idx, (product_id, product_name, price) in enumerate(product_items):
+                        col_idx = idx % 3
+                        with cols[col_idx]:
+                            if st.button(
+                                f"{product_name}\n{format_price(price)}",
+                                key=f"menu_btn_{product_id}",
+                                use_container_width=True
+                            ):
+                                st.session_state.selected_product = {
+                                    'product_id': product_id,
+                                    'product_name': product_name,
+                                    'price': price
+                                }
+                                show_modifier_dialog()
+    
 # Run the page
 if __name__ == "__main__":
     show_order_page()
