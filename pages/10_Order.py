@@ -46,13 +46,13 @@ def get_modifiers(product_id):
         SELECT 
             m.modifier_id,
             m.description,
-            m.modifier_group_id,
+            m.modifier_type_id,
             m.price,
             mg.description as group_description
         FROM Modifier m
-        LEFT JOIN Modifier_Group mg ON m.modifier_group_id = mg.modifier_group_id
+        LEFT JOIN Modifier_Type mg ON m.modifier_type_id = mg.modifier_type_id
         WHERE m.product_id = ? AND m.status = 1
-        ORDER BY m.modifier_group_id, m.modifier_id
+        ORDER BY m.modifier_type_id, m.modifier_id
     ''', (product_id,))
     modifiers = cursor.fetchall()
     conn.close()
@@ -122,6 +122,42 @@ def create_order():
         cursor.execute('''
             INSERT INTO Order_Cart (service_area_id, order_status, username, provided_name, note)
             VALUES (0, 10, ?, ?, ?)
+        ''', (st.session_state.get('username'), st.session_state.provided_name, st.session_state.note))
+        order_id = cursor.lastrowid
+        st.session_state.order_id = order_id
+        
+        # Insert items into Order_Product
+        for item in st.session_state.cart:
+            # Create comma-separated list of modifier IDs
+            modifier_ids = ','.join(str(mod['modifier_id']) for mod in item['modifiers']) if item['modifiers'] else None
+            
+            cursor.execute('''
+                INSERT INTO Order_Product (order_id, product_id, modifiers, product_quantity)
+                VALUES (?, ?, ?, ?)
+            ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        st.error(f"Error creating order: {e}")
+        return False
+    finally:
+        conn.close()
+
+def create_hold():
+    """Create hold and insert into database"""
+    if not st.session_state.cart:
+        return False
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Create order in Order_Cart
+        cursor.execute('''
+            INSERT INTO Order_Cart (service_area_id, order_status, username, provided_name, note)
+            VALUES (0, 9, ?, ?, ?)
         ''', (st.session_state.get('username'), st.session_state.provided_name, st.session_state.note))
         order_id = cursor.lastrowid
         st.session_state.order_id = order_id
@@ -292,7 +328,15 @@ def show_order_page():
                 # Clear cart after successful order
                 st.session_state.cart = []
                 # Navigate to checkout
-                st.switch_page("pages/11_Checkout.py")
+                st.switch_page("pages/12_Checkout.py")
+
+        if st.button("On Hold", type="primary", use_container_width=False, disabled=checkout_disabled):
+            if create_hold():
+                st.success("Hold created successfully!")
+                # Clear cart after successful order
+                st.session_state.cart = []
+                # Navigate to checkout
+                st.switch_page("pages/11_On_Hold.py")
 
     # Right column - Menu
     with col_menu:
