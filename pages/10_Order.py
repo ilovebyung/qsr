@@ -145,41 +145,41 @@ def create_order():
     finally:
         conn.close()
 
-def create_hold():
-    """Create hold and insert into database"""
-    if not st.session_state.cart:
-        return False
+# def create_hold():
+#     """Create hold and insert into database"""
+#     if not st.session_state.cart:
+#         return False
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
     
-    try:
-        # Create order in Order_Cart
-        cursor.execute('''
-            INSERT INTO Order_Cart (service_area_id, order_status, username, provided_name, note)
-            VALUES (0, 9, ?, ?, ?)
-        ''', (st.session_state.get('username'), st.session_state.provided_name, st.session_state.note))
-        order_id = cursor.lastrowid
-        st.session_state.order_id = order_id
+#     try:
+#         # Create order in Order_Cart
+#         cursor.execute('''
+#             INSERT INTO Order_Cart (service_area_id, order_status, username, provided_name, note)
+#             VALUES (0, 9, ?, ?, ?)
+#         ''', (st.session_state.get('username'), st.session_state.provided_name, st.session_state.note))
+#         order_id = cursor.lastrowid
+#         st.session_state.order_id = order_id
         
-        # Insert items into Order_Product
-        for item in st.session_state.cart:
-            # Create comma-separated list of modifier IDs
-            modifier_ids = ','.join(str(mod['modifier_id']) for mod in item['modifiers']) if item['modifiers'] else None
+#         # Insert items into Order_Product
+#         for item in st.session_state.cart:
+#             # Create comma-separated list of modifier IDs
+#             modifier_ids = ','.join(str(mod['modifier_id']) for mod in item['modifiers']) if item['modifiers'] else None
             
-            cursor.execute('''
-                INSERT INTO Order_Product (order_id, product_id, modifiers, product_quantity)
-                VALUES (?, ?, ?, ?)
-            ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
+#             cursor.execute('''
+#                 INSERT INTO Order_Product (order_id, product_id, modifiers, product_quantity)
+#                 VALUES (?, ?, ?, ?)
+#             ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
         
-        conn.commit()
-        return True
-    except Exception as e:
-        conn.rollback()
-        st.error(f"Error creating order: {e}")
-        return False
-    finally:
-        conn.close()
+#         conn.commit()
+#         return True
+#     except Exception as e:
+#         conn.rollback()
+#         st.error(f"Error creating order: {e}")
+#         return False
+#     finally:
+#         conn.close()
 
 @st.dialog("Customize Your Order")
 def show_modifier_dialog():
@@ -330,13 +330,13 @@ def show_order_page():
                 # Navigate to checkout
                 st.switch_page("pages/12_Checkout.py")
 
-        if st.button("On Hold", type="primary", use_container_width=False, disabled=checkout_disabled):
-            if create_hold():
-                st.success("Hold created successfully!")
-                # Clear cart after successful order
-                st.session_state.cart = []
-                # Navigate to checkout
-                st.switch_page("pages/11_On_Hold.py")
+        # if st.button("On Hold", type="primary", use_container_width=False, disabled=checkout_disabled):
+        #     if create_hold():
+        #         st.success("Hold created successfully!")
+        #         # Clear cart after successful order
+        #         st.session_state.cart = []
+        #         # Navigate to checkout
+        #         st.switch_page("pages/11_On_Hold.py")
 
     # Right column - Menu
     with col_menu:
