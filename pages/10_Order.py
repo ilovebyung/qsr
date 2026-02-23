@@ -48,9 +48,9 @@ def get_modifiers(product_id):
             m.description,
             m.modifier_type_id,
             m.price,
-            mg.description as group_description
+            mt.description as group_description
         FROM Modifier m
-        LEFT JOIN Modifier_Type mg ON m.modifier_type_id = mg.modifier_type_id
+        LEFT JOIN Modifier_Type mt ON m.modifier_type_id = mt.modifier_type_id
         WHERE m.product_id = ? AND m.status = 1
         ORDER BY m.modifier_type_id, m.modifier_id
     ''', (product_id,))
