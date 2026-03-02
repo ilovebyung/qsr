@@ -1,16 +1,34 @@
 import streamlit as st
 import pandas as pd
-from utils.util import format_price, calculate_split_amounts , print_receipt
+from utils.util import format_price, calculate_split_amounts, print_receipt
 from utils.database import get_db_connection, get_order_details, get_modifiers_details
 from utils.style import load_css 
 
-st.set_page_config(page_title="Checkout",page_icon="💳",layout="wide",initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Checkout", page_icon="💳", layout="wide", initial_sidebar_state="collapsed")
 load_css()
+
+def remove_item_from_db(order_id,):
+    """Helper to remove a specific item from the order in the database"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Note: In a production app, it's better to use a unique row ID 
+        # but here we use order_id and description based on your current schema
+        cursor.execute("""
+            DELETE FROM Order_Cart 
+            WHERE order_id = ?
+        """, (order_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        st.error(f"Error removing item: {e}")
+        return False
+    finally:
+        conn.close()
 
 def settle_order(order_ids, total):
     conn = get_db_connection()
     cursor = conn.cursor()
-    
     try:
         for order_id in order_ids:
             cursor.execute("""
@@ -18,7 +36,6 @@ def settle_order(order_ids, total):
                 SET order_status = 11, total = ?
                 WHERE order_id = ?
             """, (total, order_id))
-        
         conn.commit()
         return True
     except Exception as e:
@@ -51,11 +68,7 @@ def initialize_session_state():
         st.session_state.split_count = 1
 
 def show_checkout_page():
-
     initialize_session_state()
-
-    # st.title("💳 Checkout")
-    # st.markdown("---")
 
     col1, col2, col3 = st.columns([3, 1, 1])
     
@@ -63,9 +76,11 @@ def show_checkout_page():
         order_data = get_order_details()
         
         if not order_data:
-            st.switch_page("pages/10_Order.py")
+            st.info("No items in cart.")
+            if st.button("Return to Menu"):
+                st.switch_page("pages/10_Order.py")
+            return
         
-        # Process order data with modifiers
         orders = {}
         subtotal = 0
         
@@ -75,16 +90,12 @@ def show_checkout_page():
                 orders[order_id] = []
             
             if row['product_id']:
-                # Get modifiers for this product
                 modifiers = get_modifiers_details(row['modifiers'])
-                
-                # Calculate total modifier price
                 modifier_total_price = sum(mod['price'] for mod in modifiers)
-                
-                # Item total = (product price + all modifier prices) * quantity
                 item_total = (row['product_price'] + modifier_total_price) * row['product_quantity']
                 
                 orders[order_id].append({
+                    'order_id': order_id, # Added for removal logic
                     'description': row['product_description'],
                     'quantity': row['product_quantity'],
                     'base_price': row['product_price'],
@@ -92,47 +103,50 @@ def show_checkout_page():
                     'modifier_total': modifier_total_price,
                     'item_total': item_total
                 })
-                
                 subtotal += item_total
         
         st.subheader(f'Order: {", ".join(str(k) for k in orders.keys())}')
 
-        # Prepare detailed table data
-        table_data = []
+        # --- REWRITTEN ITEMS LIST WITH REMOVE BUTTON ---
+        # Header for the custom table
+        hcol1, hcol2, hcol3, hcol4, hcol5 = st.columns([3, 1, 1, 1, 0.5])
+        hcol1.write("**Description**")
+        hcol2.write("**Qty**")
+        hcol3.write("**Price**")
+        hcol4.write("**Total**")
+        hcol5.write("") # Space for delete button header
+        st.markdown("---")
 
         for order_id, items in orders.items():
-            for item in items:
-                # Main product row
-                description = item['description']
+            for idx, item in enumerate(items):
+                icol1, icol2, icol3, icol4, icol5 = st.columns([3, 1, 1, 1, 0.5])
                 
-                # Show modifiers in description if present
-                if item['modifiers']:
-                    modifier_text = ", ".join([
-                        f"{mod['description']} (+{format_price(mod['price'])})" 
-                        for mod in item['modifiers']
-                    ])
-                    description += f"\n  └─ {modifier_text}"
+                # Column 1: Description + Modifiers
+                with icol1:
+                    st.write(f"**{item['description']}**")
+                    if item['modifiers']:
+                        for mod in item['modifiers']:
+                            st.caption(f"└─ {mod['description']} (+{format_price(mod['price'])})")
                 
-                table_data.append({
-                    "Description": description,
-                    "Quantity": item['quantity'],
-                    "Price": format_price(item['base_price'] + item['modifier_total']),
-                    "Total": format_price(item['item_total'])
-                })
+                # Column 2: Quantity
+                icol2.write(f"{item['quantity']}")
+                
+                # Column 3: Unit Price
+                icol3.write(format_price(item['base_price'] + item['modifier_total']))
+                
+                # Column 4: Item Total
+                icol4.write(format_price(item['item_total']))
+                
+                # Column 5: REMOVE BUTTON
+                if icol5.button("🗑️", key=f"remove_{order_id}_{idx}"):
+                    if remove_item_from_db(order_id,):
+                        st.rerun()
 
-        # Create DataFrame
-        df = pd.DataFrame(table_data)
+        st.markdown("---")
         
-        # Display as table
-        st.table(df.set_index(df.columns[0]))
-        
-        # Payment Section    
+        # Payment Summary Section    
         TAX = 175  # $1.75
-        
-        payment_items = [
-            ("Subtotal", subtotal),
-            ("Tax", TAX)
-        ]
+        payment_items = [("Subtotal", subtotal), ("Tax", TAX)]
         
         for label, amount in payment_items:
             st.markdown(f"""
@@ -142,118 +156,75 @@ def show_checkout_page():
             </div>
             """, unsafe_allow_html=True)
     
-    if 'orders' in locals():
+    # Logic for Remaining Balance and Pad
+    if 'orders' in locals() and orders:
         balance_due = subtotal + TAX
         remaining_balance = balance_due - st.session_state.amount_tendered
         
-        # COLUMN 2: NUMBER PAD
         with col2:
             st.markdown(f"""
             <div class="balance-header">Remaining Balance / Change Due</div>
             <div class="balance-amount">{format_price(remaining_balance)}</div>            
             """, unsafe_allow_html=True)
             
-            if st.session_state.current_input:
-                st.markdown(f"**Current input:** ${st.session_state.current_input}")
-            else:
-                st.markdown(f"**Current input:** ${0}")
-
+            st.write(f"**Current input:** ${st.session_state.current_input if st.session_state.current_input else '0'}")
             st.markdown("### Number Pad")
             
-            # Calculator Grid
             for row in [["7","8","9"], ["4","5","6"], ["1","2","3"]]:
                 cols = st.columns(3)
                 for i, num in enumerate(row):
-                    with cols[i]:
-                        if st.button(num, key=f"calc_{num}", use_container_width=True):
-                            handle_calculator_input(num)
-                            st.rerun()
+                    if cols[i].button(num, key=f"calc_{num}", use_container_width=True):
+                        handle_calculator_input(num)
+                        st.rerun()
             
-            calc_col1, calc_col2, calc_col3 = st.columns(3)
-            with calc_col1:
-                if st.button("0", key="calc_0", use_container_width=True):
-                    handle_calculator_input("0")
-                    st.rerun()
-            with calc_col2:
-                if st.button(".", key="calc_.", use_container_width=True):
-                    handle_calculator_input(".")
-                    st.rerun()
-            with calc_col3:
-                if st.button("Del", key="calc_delete", use_container_width=True):
-                    handle_calculator_input("delete")
-                    st.rerun()
+            c1, c2, c3 = st.columns(3)
+            if c1.button("0", key="calc_0", use_container_width=True):
+                handle_calculator_input("0"); st.rerun()
+            if c2.button(".", key="calc_.", use_container_width=True):
+                handle_calculator_input("."); st.rerun()
+            if c3.button("Del", key="calc_delete", use_container_width=True):
+                handle_calculator_input("delete"); st.rerun()
             
             if st.button("Enter", key="calc_enter", use_container_width=True, type="primary"):
                 handle_calculator_input("enter")
                 st.rerun()
         
-        # COLUMN 3: PAYMENT & SPLIT
         with col3:
             st.markdown("### Payment Type")
-            
-            if st.button("Credit", key="credit", use_container_width=True, type="secondary"):
-                pass
-            
-            if st.button("Cash", key="cash", use_container_width=True, type="secondary"):
-                pass
+            st.button("Credit", key="credit", use_container_width=True)
+            st.button("Cash", key="cash", use_container_width=True)
             
             st.markdown("---")
-            
-            # Split evenly section
             st.markdown("### Split Evenly")
             
-            split_col1, split_col2, split_col3 = st.columns([1, 2, 1])
-            
-            with split_col1:
-                if st.button("🔻", key="split_minus", use_container_width=True):    #➖
-                    if st.session_state.split_count > 1:
-                        st.session_state.split_count -= 1
-                        st.rerun()
-            
-            with split_col2:
-                st.markdown(f"<div style='text-align: center; padding: 1.5rem; font-weight: bold; font-size: 18px;'>{st.session_state.split_count}</div>", unsafe_allow_html=True)
-
-            with split_col3:
-                if st.button("🔺", key="split_plus", use_container_width=True):   #➕
-                    st.session_state.split_count += 1
+            sc1, sc2, sc3 = st.columns([1, 2, 1])
+            if sc1.button("🔻", key="split_minus", use_container_width=True):
+                if st.session_state.split_count > 1:
+                    st.session_state.split_count -= 1
                     st.rerun()
+            sc2.markdown(f"<div style='text-align: center; font-weight: bold; font-size: 18px;'>{st.session_state.split_count}</div>", unsafe_allow_html=True)
+            if sc3.button("🔺", key="split_plus", use_container_width=True):
+                st.session_state.split_count += 1
+                st.rerun()
             
             if st.session_state.split_count > 1:
                 split_amounts = calculate_split_amounts(balance_due, st.session_state.split_count)
-                st.markdown("**Split amounts:**")
                 for i, amount in enumerate(split_amounts):
-                    st.markdown(f"<div class='split-amount'>Person {i+1}: {format_price(amount)}</div>", unsafe_allow_html=True)
+                    st.caption(f"Person {i+1}: {format_price(amount)}")
             
             st.markdown("---")
             
-            # Settle Button
             if st.button("Settle", key="settle", use_container_width=True, type="primary"):
-                total = subtotal + TAX
-                
-                if settle_order(list(orders.keys()), total):
+                if settle_order(list(orders.keys()), balance_due):
                     st.session_state.amount_tendered = 0
                     st.session_state.current_input = ""
                     st.session_state.split_count = 1
-                    
-                    st.success("Order settled successfully!")
+                    st.success("Order settled!")
                     st.switch_page("pages/10_Order.py")
 
-            # # Print Button
-            # if st.button("Settle with receipt", key="settle_receipt", use_container_width=True, type="primary"):
-            #     total = subtotal + TAX
-
-            # Add a button to print receipt
-            if st.button("Print Receipt", key="receipt", use_container_width=True, type="primary"):
+            if st.button("Print Receipt", key="receipt", use_container_width=True):
                 if print_receipt(orders, subtotal, TAX):
-                    st.success("printing successfully.")
-
-                # if settle_order(list(orders.keys()), total):
-                #     st.session_state.amount_tendered = 0
-                #     st.session_state.current_input = ""
-                #     st.session_state.split_count = 1
-                    
-                #     st.success("Order settled successfully!")
-                #     st.switch_page("pages/10_Order.py")
+                    st.success("Printing...")
 
 if __name__ == "__main__":
     show_checkout_page()
