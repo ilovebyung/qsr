@@ -8,6 +8,29 @@ from utils.style import load_css
 st.set_page_config(page_title="Orders", page_icon="🗒", layout="wide", initial_sidebar_state="collapsed")
 load_css()
 
+# Inject CSS for consistent product button sizing and cart styling
+st.markdown("""
+<style>
+/* Ensure all product buttons are the same fixed size */
+div[data-testid="column"] .stButton > button[kind="secondary"] {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    width: 100% !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow: hidden !important;
+    font-size: 0.85rem !important;
+    line-height: 1.3 !important;
+    padding: 8px 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Initialize session state for cart
 if 'cart' not in st.session_state:
     st.session_state.cart = []
@@ -145,42 +168,6 @@ def create_order():
     finally:
         conn.close()
 
-# def create_hold():
-#     """Create hold and insert into database"""
-#     if not st.session_state.cart:
-#         return False
-
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-    
-#     try:
-#         # Create order in Order_Cart
-#         cursor.execute('''
-#             INSERT INTO Order_Cart (service_area_id, order_status, username, provided_name, note)
-#             VALUES (0, 9, ?, ?, ?)
-#         ''', (st.session_state.get('username'), st.session_state.provided_name, st.session_state.note))
-#         order_id = cursor.lastrowid
-#         st.session_state.order_id = order_id
-        
-#         # Insert items into Order_Product
-#         for item in st.session_state.cart:
-#             # Create comma-separated list of modifier IDs
-#             modifier_ids = ','.join(str(mod['modifier_id']) for mod in item['modifiers']) if item['modifiers'] else None
-            
-#             cursor.execute('''
-#                 INSERT INTO Order_Product (order_id, product_id, modifiers, product_quantity)
-#                 VALUES (?, ?, ?, ?)
-#             ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
-        
-#         conn.commit()
-#         return True
-#     except Exception as e:
-#         conn.rollback()
-#         st.error(f"Error creating order: {e}")
-#         return False
-#     finally:
-#         conn.close()
-
 @st.dialog("Customize Your Order")
 def show_modifier_dialog():
     """Dialog to show and select modifiers for a product"""
@@ -275,38 +262,42 @@ def show_order_page():
     # Left column - Cart
     with col_cart:
         st.subheader("Orders")
-        
-        if st.session_state.cart:
-            # Display cart items
-            for i, item in enumerate(st.session_state.cart):
-                with st.container():
-                    cart_col1, cart_col2, cart_col3 = st.columns([3, 2, 2])
-                    
-                    with cart_col1:
-                        st.write(f"**{item['product_name']}**")
-                        st.caption(f"Base: {format_price(item['base_price'])}")
-                        if item['modifiers']:
-                            for modifier in item['modifiers']:
-                                mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
-                                st.caption(f"• {modifier['description']}{mod_price}")
-                    
-                    with cart_col2:
-                        quantity_col1, quantity_col2, quantity_col3 = st.columns([1, 1, 1])
-                        with quantity_col1:
-                            if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):
-                                update_quantity(i, -1)
-                                st.rerun()
-                        with quantity_col2:
-                            st.write(f"{item['quantity']}")
-                        with quantity_col3:
-                            if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):
-                                update_quantity(i, 1)
-                                st.rerun()
-                    
-                    with cart_col3:
-                        st.write(format_price(item['price'] * item['quantity']))
-        else:
-            st.info("Cart is empty")
+
+        # Scrollable cart container with fixed height (fits ~1080px screen, leaving room for inputs/button)
+        with st.container(height=500, border=True):
+            if st.session_state.cart:
+                # Display cart items
+                for i, item in enumerate(st.session_state.cart):
+                    with st.container():
+                        cart_col1, cart_col2, cart_col3 = st.columns([3, 2, 2])
+                        
+                        with cart_col1:
+                            st.write(f"**{item['product_name']}**")
+                            st.caption(f"Base: {format_price(item['base_price'])}")
+                            if item['modifiers']:
+                                for modifier in item['modifiers']:
+                                    mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
+                                    st.caption(f"• {modifier['description']}{mod_price}")
+                        
+                        with cart_col2:
+                            quantity_col1, quantity_col2, quantity_col3 = st.columns([1, 1, 1])
+                            with quantity_col1:
+                                if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):
+                                    update_quantity(i, -1)
+                                    st.rerun()
+                            with quantity_col2:
+                                st.write(f"{item['quantity']}")
+                            with quantity_col3:
+                                if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):
+                                    update_quantity(i, 1)
+                                    st.rerun()
+                        
+                        with cart_col3:
+                            st.write(format_price(item['price'] * item['quantity']))
+                        
+                        st.divider()
+            else:
+                st.info("Cart is empty")
 
         # Input field for provided_name and note
         if 'provided_name' not in st.session_state:
@@ -329,14 +320,6 @@ def show_order_page():
                 st.session_state.cart = []
                 # Navigate to checkout
                 st.switch_page("pages/12_Checkout.py")
-
-        # if st.button("On Hold", type="primary", use_container_width=False, disabled=checkout_disabled):
-        #     if create_hold():
-        #         st.success("Hold created successfully!")
-        #         # Clear cart after successful order
-        #         st.session_state.cart = []
-        #         # Navigate to checkout
-        #         st.switch_page("pages/11_On_Hold.py")
 
     # Right column - Menu
     with col_menu:
