@@ -32,7 +32,7 @@ def get_products(group_id):
         SELECT product_id, description, price 
         FROM Product
         WHERE category_id = ?
-        ORDER BY product_id
+        ORDER BY rank
     ''', (group_id,))
     items = cursor.fetchall()
     conn.close()
