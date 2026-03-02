@@ -313,7 +313,7 @@ def show_order_page():
         
         # Checkout button
         checkout_disabled = len(st.session_state.cart) == 0
-        if st.button("Checkout", type="primary", use_container_width=False, disabled=checkout_disabled):
+        if st.button("Checkout", type="primary", use_container_width=True, disabled=checkout_disabled):
             if create_order():
                 st.success("Order created successfully!")
                 # Clear cart after successful order
