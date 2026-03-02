@@ -59,7 +59,7 @@ def delete_modifier(modifier_id):
 
 # Main app
 st.set_page_config(
-    page_title="Product Modifier Assignment", 
+    page_title="Assign Modifier to Product",  
     page_icon="🧂", 
     layout="wide", 
     initial_sidebar_state="collapsed"
