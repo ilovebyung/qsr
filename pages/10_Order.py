@@ -8,28 +8,6 @@ from utils.style import load_css
 st.set_page_config(page_title="Orders", page_icon="🗒", layout="wide", initial_sidebar_state="collapsed")
 load_css()
 
-# Inject CSS for consistent product button sizing and cart styling
-st.markdown("""
-<style>
-/* Ensure all product buttons are the same fixed size */
-div[data-testid="column"] .stButton > button[kind="secondary"] {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-    width: 100% !important;
-    white-space: pre-wrap !important;
-    word-wrap: break-word !important;
-    overflow: hidden !important;
-    font-size: 0.85rem !important;
-    line-height: 1.3 !important;
-    padding: 8px 6px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 # Initialize session state for cart
 if 'cart' not in st.session_state:
@@ -37,6 +15,20 @@ if 'cart' not in st.session_state:
 
 if 'order_id' not in st.session_state:
     st.session_state.order_id = None
+
+# --- Two-dialog state ---
+# Confirmed non-type-1 selections: { modifier_id: { modifier_id, description, price, selected_item } }
+if 'dialog_modifier_selections' not in st.session_state:
+    st.session_state.dialog_modifier_selections = {}
+
+# Set when a non-type-1 modifier button is clicked → triggers sub-dialog on next render
+# { modifier_id, modifier_description, modifier_type_id, price }
+if 'pending_sub_modifier' not in st.session_state:
+    st.session_state.pending_sub_modifier = None
+
+# Set to True after sub-dialog confirms → re-opens main dialog
+if 'reopen_main_dialog' not in st.session_state:
+    st.session_state.reopen_main_dialog = False
 
 def get_category():
     """Get all categories"""
@@ -94,6 +86,20 @@ def get_modifiers(product_id):
             'price': price
         })
     return modifier_groups
+
+def get_modifier_type_items(modifier_type_id):
+    """Get selectable items for a given modifier type from Modifier_Type_Item."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT description
+        FROM Modifier_Type_Item
+        WHERE modifier_type_id = ?
+        ORDER BY rowid
+    ''', (modifier_type_id,))
+    items = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return items
 
 def add_to_cart(product_id, product_name, price, modifiers):
     """Add item to cart or update quantity if already exists"""
@@ -170,191 +176,266 @@ def create_order():
 
 @st.dialog("Customize Your Order")
 def show_modifier_dialog():
-    """Dialog to show and select modifiers for a product"""
+    """
+    Dialog 1 — shown when a menu item is tapped.
+    • modifier_type_id == 1  →  st.checkbox  (multiple allowed)
+    • modifier_type_id != 1  →  button that triggers Dialog 2
+    Previously confirmed sub-dialog selections are displayed with a ✅ badge.
+    """
     if 'selected_product' not in st.session_state or not st.session_state.selected_product:
         return
-        
-    product = st.session_state.selected_product
-    product_id = product['product_id']
+
+    product      = st.session_state.selected_product
+    product_id   = product['product_id']
     product_name = product['product_name']
-    price = product['price']
-    
+    price        = product['price']
+
     st.write(f"**{product_name}**")
     st.write(f"Base Price: {format_price(price)}")
     st.divider()
-    
-    # Get modifier groups for this product
+
     modifier_groups = get_modifiers(product_id)
-    
-    # Display modifier groups
+
     if modifier_groups:
-        for group_id, group_data in modifier_groups.items():
+        for type_id, group_data in modifier_groups.items():
             group_desc = group_data['group_description'] or "Modifiers"
-            modifiers = group_data['modifiers']
-            
-            if group_id == 0:
-                # Checkbox for group_id = 0 (multiple selection)
-                st.write(f"**{group_desc}**")
+            modifiers  = group_data['modifiers']
+
+            st.write(f"**{group_desc}**")
+
+            if type_id == 1:
+                # ── Checkbox (type 1) ─────────────────────────────────────
                 for modifier in modifiers:
                     mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
-                    checkbox_key = f"dialog_check_{product_id}_{modifier['modifier_id']}"
                     st.checkbox(
                         f"{modifier['description']}{mod_price}",
-                        key=checkbox_key
+                        key=f"dialog_check_{product_id}_{modifier['modifier_id']}"
                     )
             else:
-                # Radio button for group_id != 0 (single selection)
-                st.write(f"**{group_desc}**")
-                radio_options = ["None"] + [
-                    f"{mod['description']}" + (f" (+{format_price(mod['price'])})" if mod['price'] > 0 else "")
-                    for mod in modifiers
-                ]
-                radio_key = f"dialog_radio_{product_id}_{group_id}"
-                st.radio(
-                    group_desc,
-                    radio_options,
-                    key=radio_key,
-                    label_visibility="collapsed"
-                )
+                # ── Select-type button (type != 1) ────────────────────────
+                for modifier in modifiers:
+                    mod_id    = modifier['modifier_id']
+                    mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
+
+                    saved = st.session_state.dialog_modifier_selections.get(mod_id)
+                    if saved:
+                        label = f"✅  {modifier['description']}: {saved['selected_item']}{mod_price}"
+                    else:
+                        label = f"➕  {modifier['description']}{mod_price}  — tap to select"
+
+                    if st.button(label, key=f"sub_btn_{product_id}_{mod_id}", use_container_width=True):
+                        # Store which modifier needs sub-dialog, then rerun to open Dialog 2
+                        st.session_state.pending_sub_modifier = {
+                            'modifier_id':          mod_id,
+                            'modifier_description': modifier['description'],
+                            'modifier_type_id':     type_id,
+                            'price':                modifier['price']
+                        }
+                        st.rerun()
+
             st.write("")
-    
-    # Add to cart button in dialog
-    col1, col2 = st.columns([1, 1])
+
+    # ── Footer ────────────────────────────────────────────────────────────
+    col1, col2 = st.columns(2)
     with col1:
         if st.button("Cancel", use_container_width=True):
-            st.session_state.selected_product = None
+            st.session_state.selected_product           = None
+            st.session_state.dialog_modifier_selections = {}
+            st.session_state.pending_sub_modifier       = None
             st.rerun()
     with col2:
         if st.button("Add to Cart", type="primary", use_container_width=True):
             selected_modifiers = []
-            
-            # Collect selected modifiers
+
             if modifier_groups:
-                for group_id, group_data in modifier_groups.items():
+                for type_id, group_data in modifier_groups.items():
                     modifiers = group_data['modifiers']
-                    
-                    if group_id == 0:
-                        # Get checkbox selections (multiple modifiers)
+
+                    if type_id == 1:
                         for modifier in modifiers:
-                            checkbox_key = f"dialog_check_{product_id}_{modifier['modifier_id']}"
-                            if st.session_state.get(checkbox_key, False):
+                            key = f"dialog_check_{product_id}_{modifier['modifier_id']}"
+                            if st.session_state.get(key, False):
                                 selected_modifiers.append(modifier)
                     else:
-                        # Get radio selection (single modifier per group)
-                        radio_key = f"dialog_radio_{product_id}_{group_id}"
-                        selected_option = st.session_state.get(radio_key, "None")
-                        if selected_option != "None":
-                            # Find the matching modifier
-                            for modifier in modifiers:
-                                mod_label = f"{modifier['description']}" + (f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else "")
-                                if selected_option == mod_label:
-                                    selected_modifiers.append(modifier)
-                                    break
-            
+                        for modifier in modifiers:
+                            saved = st.session_state.dialog_modifier_selections.get(modifier['modifier_id'])
+                            if saved:
+                                selected_modifiers.append({
+                                    'modifier_id': saved['modifier_id'],
+                                    'description': saved['description'],
+                                    'price':       saved['price']
+                                })
+
             add_to_cart(product_id, product_name, price, selected_modifiers)
-            st.session_state.selected_product = None
+            st.session_state.selected_product           = None
+            st.session_state.dialog_modifier_selections = {}
+            st.session_state.pending_sub_modifier       = None
             st.rerun()
 
+
+@st.dialog("Select Option")
+def show_sub_modifier_dialog():
+    """
+    Dialog 2 — opens when a non-type-1 modifier button is clicked in Dialog 1.
+    Presents a selectbox of Modifier_Type_Item options for that modifier's type.
+    Confirm saves the choice and re-opens Dialog 1; Back discards and re-opens Dialog 1.
+    """
+    pending = st.session_state.pending_sub_modifier
+    if not pending:
+        st.rerun()
+        return
+
+    modifier_id      = pending['modifier_id']
+    modifier_desc    = pending['modifier_description']
+    modifier_type_id = pending['modifier_type_id']
+    modifier_price   = pending['price']
+
+    price_label = f" (+{format_price(modifier_price)})" if modifier_price > 0 else ""
+    st.write(f"**{modifier_desc}**{price_label}")
+    st.divider()
+
+    type_items = get_modifier_type_items(modifier_type_id)
+
+    # Pre-select a previous choice if it exists
+    saved       = st.session_state.dialog_modifier_selections.get(modifier_id, {})
+    prev_item   = saved.get('selected_item')
+    options     = ["None"] + type_items
+    default_idx = options.index(prev_item) if prev_item in options else 0
+
+    selected = st.selectbox(
+        f"Choose {modifier_desc}",
+        options,
+        index=default_idx,
+        label_visibility="collapsed"
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("← Back", use_container_width=True):
+            # Discard, clear pending, re-open Dialog 1
+            st.session_state.pending_sub_modifier = None
+            st.session_state.reopen_main_dialog   = True
+            st.rerun()
+    with col2:
+        if st.button("Confirm", type="primary", use_container_width=True):
+            if selected != "None":
+                st.session_state.dialog_modifier_selections[modifier_id] = {
+                    'modifier_id':   modifier_id,
+                    'description':   f"{modifier_desc}: {selected}",
+                    'price':         modifier_price,
+                    'selected_item': selected
+                }
+            else:
+                st.session_state.dialog_modifier_selections.pop(modifier_id, None)
+            st.session_state.pending_sub_modifier = None
+            st.session_state.reopen_main_dialog   = True
+            st.rerun()
+
+
 def show_order_page():
-    # Create two columns
+    # ── Re-open Dialog 1 after Dialog 2 closes ─────────────────────────────
+    if st.session_state.reopen_main_dialog and st.session_state.get('selected_product'):
+        st.session_state.reopen_main_dialog = False
+        show_modifier_dialog()
+        return
+
+    # ── Open Dialog 2 when a non-type-1 modifier button was clicked ────────
+    if st.session_state.pending_sub_modifier:
+        show_sub_modifier_dialog()
+        return
+
     col_cart, col_menu = st.columns([1, 2])
 
-    # Left column - Cart
+    # Left column – Cart
     with col_cart:
         st.subheader("Orders")
 
-        # Scrollable cart container with fixed height (fits ~1080px screen, leaving room for inputs/button)
-        with st.container(height=500, border=True):
+        with st.container(height=400, border=True):
             if st.session_state.cart:
-                # Display cart items
                 for i, item in enumerate(st.session_state.cart):
                     with st.container():
                         cart_col1, cart_col2, cart_col3 = st.columns([3, 2, 2])
-                        
+
                         with cart_col1:
                             st.write(f"**{item['product_name']}**")
                             st.caption(f"Base: {format_price(item['base_price'])}")
                             if item['modifiers']:
                                 for modifier in item['modifiers']:
-                                    mod_price = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
-                                    st.caption(f"• {modifier['description']}{mod_price}")
-                        
+                                    mp = f" (+{format_price(modifier['price'])})" if modifier['price'] > 0 else ""
+                                    st.caption(f"• {modifier['description']}{mp}")
+
                         with cart_col2:
-                            quantity_col1, quantity_col2, quantity_col3 = st.columns([1, 1, 1])
-                            with quantity_col1:
+                            q1, q2, q3 = st.columns([1, 1, 1])
+                            with q1:
                                 if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):
                                     update_quantity(i, -1)
                                     st.rerun()
-                            with quantity_col2:
+                            with q2:
                                 st.write(f"{item['quantity']}")
-                            with quantity_col3:
+                            with q3:
                                 if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):
                                     update_quantity(i, 1)
                                     st.rerun()
-                        
+
                         with cart_col3:
                             st.write(format_price(item['price'] * item['quantity']))
-                        
+
                         st.divider()
             else:
                 st.info("Cart is empty")
 
-        # Input field for provided_name and note
         if 'provided_name' not in st.session_state:
-            st.session_state.provided_name = ''   
-            st.session_state.note = ''  
+            st.session_state.provided_name = ''
+            st.session_state.note = ''
 
-        st.session_state.provided_name = st.text_input("Name? 👋")
-        st.session_state.note = st.text_input("Special request? 👋")
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.session_state.provided_name = st.text_input("Name? 👋")
+        with col2:
+            st.session_state.note = st.text_input("Special request? 👋")
 
-        # Subtotal
         subtotal = calculate_subtotal()
         st.subheader(f"Subtotal: {format_price(subtotal)}")
-        
-        # Checkout button
+
         checkout_disabled = len(st.session_state.cart) == 0
         if st.button("Checkout", type="primary", use_container_width=True, disabled=checkout_disabled):
             if create_order():
                 st.success("Order created successfully!")
-                # Clear cart after successful order
                 st.session_state.cart = []
-                # Navigate to checkout
                 st.switch_page("pages/12_Checkout.py")
 
-    # Right column - Menu
+    # Right column – Menu
     with col_menu:
         st.subheader("Menu")
-        
-        # Get product groups
         category = get_category()
-        
-        # Create tabs for product groups
+
         if category:
             group_names = [group[1] for group in category]
             tabs = st.tabs(group_names)
-            
+
             for i, (group_id, group_name) in enumerate(category):
                 with tabs[i]:
-                    # Get product items for this group
                     product_items = get_products(group_id)
-                    
-                    # Display product items in 3 columns
                     cols = st.columns(3)
                     for idx, (product_id, product_name, price) in enumerate(product_items):
-                        col_idx = idx % 3
-                        with cols[col_idx]:
+                        with cols[idx % 3]:
                             if st.button(
                                 f"{product_name}\n{format_price(price)}",
                                 key=f"menu_btn_{product_id}",
                                 use_container_width=True
                             ):
                                 st.session_state.selected_product = {
-                                    'product_id': product_id,
+                                    'product_id':   product_id,
                                     'product_name': product_name,
-                                    'price': price
+                                    'price':        price
                                 }
+                                # Reset per-dialog state before opening
+                                st.session_state.dialog_modifier_selections = {}
+                                st.session_state.pending_sub_modifier       = None
+                                st.session_state.reopen_main_dialog         = False
                                 show_modifier_dialog()
-    
+
+
 # Run the page
 if __name__ == "__main__":
     show_order_page()
