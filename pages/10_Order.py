@@ -406,34 +406,45 @@ def show_order_page():
 
     # Right column – Menu
     with col_menu:
-        st.subheader("Menu")
-        category = get_category()
+            st.subheader("Menu")
 
-        if category:
-            group_names = [group[1] for group in category]
-            tabs = st.tabs(group_names)
+            # Make menu buttons tall enough for two-line text (scoped to tabs only)
+            st.markdown("""
+                <style>
+                div[data-testid="stTabs"] div[data-testid="stButton"] button {
+                    height: 120px;
+                    white-space: pre-wrap;
+                    line-height: 1.4;
+                }
+                </style>
+            """, unsafe_allow_html=True)
 
-            for i, (group_id, group_name) in enumerate(category):
-                with tabs[i]:
-                    product_items = get_products(group_id)
-                    cols = st.columns(3)
-                    for idx, (product_id, product_name, price) in enumerate(product_items):
-                        with cols[idx % 3]:
-                            if st.button(
-                                f"{product_name}\n{format_price(price)}",
-                                key=f"menu_btn_{product_id}",
-                                use_container_width=True
-                            ):
-                                st.session_state.selected_product = {
-                                    'product_id':   product_id,
-                                    'product_name': product_name,
-                                    'price':        price
-                                }
-                                # Reset per-dialog state before opening
-                                st.session_state.dialog_modifier_selections = {}
-                                st.session_state.pending_sub_modifier       = None
-                                st.session_state.reopen_main_dialog         = False
-                                show_modifier_dialog()
+            category = get_category()
+
+            if category:
+                group_names = [group[1] for group in category]
+                tabs = st.tabs(group_names)
+
+                for i, (group_id, group_name) in enumerate(category):
+                    with tabs[i]:
+                        product_items = get_products(group_id)
+                        cols = st.columns(3)
+                        for idx, (product_id, product_name, price) in enumerate(product_items):
+                            with cols[idx % 3]:
+                                if st.button(
+                                    f"{product_name}\n{format_price(price)}",
+                                    key=f"menu_btn_{product_id}",
+                                    use_container_width=True
+                                ):
+                                    st.session_state.selected_product = {
+                                        'product_id':   product_id,
+                                        'product_name': product_name,
+                                        'price':        price
+                                    }
+                                    st.session_state.dialog_modifier_selections = {}
+                                    st.session_state.pending_sub_modifier       = None
+                                    st.session_state.reopen_main_dialog         = False
+                                    show_modifier_dialog()
 
 
 # Run the page
