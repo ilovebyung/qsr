@@ -77,7 +77,7 @@ def show_checkout_page():
         
         if not order_data:
             st.info("No items in cart.")
-            if st.button("Return to Menu"):
+            if st.button("Return to Order"):
                 st.switch_page("pages/10_Order.py")
             return
         
