@@ -105,21 +105,26 @@ def show_checkout_page():
                 })
                 subtotal += item_total
         
-        st.subheader(f'Order: {", ".join(str(k) for k in orders.keys())}')
-
-        # --- REWRITTEN ITEMS LIST WITH REMOVE BUTTON ---
+        # --- ITEMS LIST ---
         # Header for the custom table
-        hcol1, hcol2, hcol3, hcol4, hcol5 = st.columns([3, 1, 1, 1, 0.5])
+        hcol1, hcol2, hcol3, hcol4 = st.columns([3, 1, 1, 1])
         hcol1.write("**Description**")
         hcol2.write("**Qty**")
         hcol3.write("**Price**")
         hcol4.write("**Total**")
-        hcol5.write("") # Space for delete button header
         st.markdown("---")
 
         for order_id, items in orders.items():
+            # Order-level subheader with 🗑️ button
+            hdr_col1, hdr_col2 = st.columns([9, 0.5])
+            with hdr_col1:
+                st.subheader(f'Order: {order_id}')
+            if hdr_col2.button("🗑️", key=f"remove_order_{order_id}"):
+                if remove_item_from_db(order_id):
+                    st.rerun()
+
             for idx, item in enumerate(items):
-                icol1, icol2, icol3, icol4, icol5 = st.columns([3, 1, 1, 1, 0.5])
+                icol1, icol2, icol3, icol4 = st.columns([3, 1, 1, 1])
                 
                 # Column 1: Description + Modifiers
                 with icol1:
@@ -136,11 +141,6 @@ def show_checkout_page():
                 
                 # Column 4: Item Total
                 icol4.write(format_price(item['item_total']))
-                
-                # Column 5: REMOVE BUTTON
-                if icol5.button("🗑️", key=f"remove_{order_id}_{idx}"):
-                    if remove_item_from_db(order_id,):
-                        st.rerun()
 
         st.markdown("---")
         
