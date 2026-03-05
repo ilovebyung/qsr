@@ -365,14 +365,20 @@ def show_order_page():
                                     st.caption(f"• {modifier['description']}{mp}")
 
                         with cart_col2:
-                            q1, q2, q3 = st.columns([1, 1, 1])
-                            with q1:
+                            dec_col, qty_col, inc_col = st.columns([1, 1, 1])
+
+                            with dec_col:
                                 if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):
                                     update_quantity(i, -1)
                                     st.rerun()
-                            with q2:
-                                st.write(f"{item['quantity']}")
-                            with q3:
+
+                            with qty_col:
+                                st.markdown(
+                                    f"<div style='text-align:center; font-size:16px;'>{item['quantity']}</div>",
+                                    unsafe_allow_html=True
+                                )
+
+                            with inc_col:
                                 if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):
                                     update_quantity(i, 1)
                                     st.rerun()
