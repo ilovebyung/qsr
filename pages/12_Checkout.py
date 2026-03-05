@@ -197,15 +197,25 @@ def show_checkout_page():
             st.markdown("---")
             st.markdown("### Split Evenly")
             
-            sc1, sc2, sc3 = st.columns([1, 2, 1])
-            if sc1.button("🔻", key="split_minus", use_container_width=True):
-                if st.session_state.split_count > 1:
-                    st.session_state.split_count -= 1
+            sc_minus, sc_count, sc_plus = st.columns([1, 2, 1])
+
+            with sc_minus:
+                if st.button("🔻", key="split_minus", help="Decrease count"):
+                    if st.session_state.split_count > 1:
+                        st.session_state.split_count -= 1
+                        st.rerun()
+
+            with sc_count:
+                st.markdown(
+                    f"<div style='text-align:center; font-weight:bold; font-size:18px;'>{st.session_state.split_count}</div>",
+                    unsafe_allow_html=True
+                )
+
+            with sc_plus:
+                if st.button("🔺", key="split_plus", help="Increase count"):
+                    st.session_state.split_count += 1
                     st.rerun()
-            sc2.markdown(f"<div style='text-align: center; font-weight: bold; font-size: 18px;'>{st.session_state.split_count}</div>", unsafe_allow_html=True)
-            if sc3.button("🔺", key="split_plus", use_container_width=True):
-                st.session_state.split_count += 1
-                st.rerun()
+
             
             if st.session_state.split_count > 1:
                 split_amounts = calculate_split_amounts(balance_due, st.session_state.split_count)
