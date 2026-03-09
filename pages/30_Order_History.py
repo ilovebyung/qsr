@@ -22,9 +22,10 @@ def get_transaction_data(start_date, end_date):
             CASE oh.order_status
                 WHEN  9 THEN 'order on hold'            
                 WHEN 10 THEN 'order created'
-                WHEN 11 THEN 'order paid'
+                WHEN 11 THEN 'order paid & printed'
                 WHEN 12 THEN 'order confirmed by kitchen'
                 WHEN 13 THEN 'order delivered'
+                WHEN 33 THEN 'dummy order'
                 ELSE 'other'
             END AS order_status,
             oh.username,
