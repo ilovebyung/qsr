@@ -20,7 +20,7 @@ def get_transaction_data(start_date, end_date):
         SELECT 
             oh.order_id,
             CASE oh.order_status
-                WHEN  9 THEN 'order on hold'            
+                --WHEN  9 THEN 'order on hold'            
                 WHEN 10 THEN 'order created'
                 WHEN 11 THEN 'order paid & printed'
                 WHEN 12 THEN 'order confirmed by kitchen'
