@@ -24,10 +24,11 @@ def load_css():
 
     /* Remove excess padding */
     .main .block-container {
-        padding: 0.5rem !important;
-        max-width: none !important;
+        padding-top: 0rem;
+        padding-bottom: 0rem;
     }
 
+    /* Hide default header */
     .stApp > header { height: 0; }
 
     /* Compact headings */
