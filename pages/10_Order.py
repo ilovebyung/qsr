@@ -368,7 +368,7 @@ def show_order_page():
                             dec_col, qty_col, inc_col = st.columns([1, 1, 1])
 
                             with dec_col:
-                                if st.button("🔻", key=f"dec_{i}", help="Decrease quantity"):
+                                if st.button(" ➖ ", key=f"dec_{i}", help="Decrease quantity"):
                                     update_quantity(i, -1)
                                     st.rerun()
 
@@ -379,7 +379,7 @@ def show_order_page():
                                 )
 
                             with inc_col:
-                                if st.button("🔺", key=f"inc_{i}", help="Increase quantity"):
+                                if st.button(" ➕ ", key=f"inc_{i}", help="Increase quantity"):
                                     update_quantity(i, 1)
                                     st.rerun()
 

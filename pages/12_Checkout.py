@@ -116,10 +116,10 @@ def show_checkout_page():
 
         for order_id, items in orders.items():
             # Order-level subheader with 🗑️ button
-            hdr_col1, hdr_col2 = st.columns([9, 0.5])
+            hdr_col1, hdr_col2 = st.columns([9, 0.9])
             with hdr_col1:
                 st.subheader(f'Order: {order_id}')
-            if hdr_col2.button("🗑️", key=f"remove_order_{order_id}"):
+            if hdr_col2.button(" 🗑️ ", key=f"remove_order_{order_id}"):
                 if remove_item_from_db(order_id):
                     st.rerun()
 
