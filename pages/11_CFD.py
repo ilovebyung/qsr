@@ -84,7 +84,8 @@ def display_order_summary():
 
     if table_data:  # Only if we have data
         df = pd.DataFrame(table_data)
-        st.table(df.set_index(df.columns[0]))  
+        with st.container(height=500, border=True):  
+            st.table(df.set_index(df.columns[0]))  
         st.markdown(f"**Subtotal: {format_price(subtotal)}**")
     else:
         st.info("No items to display in the order.")
