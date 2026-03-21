@@ -65,6 +65,17 @@ def initialize_session_state():
     if 'split_count' not in st.session_state:
         st.session_state.split_count = 1
 
+def clear_live_cart_data():
+    """Clear all rows from Live_Cart."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM Live_Cart")
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        st.error(f"Error clearing Live_Cart: {e}")
+
 def show_checkout_page():
     initialize_session_state()
 
@@ -168,8 +179,7 @@ def show_checkout_page():
     with col2:
         with st.container(height=500, border=True):
             st.markdown(f"""
-            <div class="balance-header">Remaining Balance</div>
-            <div class="balance-amount">{format_price(remaining_balance)}</div>            
+            <div class="balance-header">Remaining Balance {format_price(remaining_balance)}</div>
             """, unsafe_allow_html=True)
 
             st.write(f"**Current input:** ${st.session_state.current_input if st.session_state.current_input else '0'}")
@@ -178,27 +188,27 @@ def show_checkout_page():
             for row in [["7","8","9"], ["4","5","6"], ["1","2","3"]]:
                 cols = st.columns(3)
                 for i, num in enumerate(row):
-                    if cols[i].button(num, key=f"calc_{num}", use_container_width=True):
+                    if cols[i].button(num, key=f"calc_{num}", width='stretch'):
                         handle_calculator_input(num)
                         st.rerun()
 
             c1, c2, c3 = st.columns(3)
-            if c1.button("0", key="calc_0", use_container_width=True):
+            if c1.button("0", key="calc_0", width='stretch'):
                 handle_calculator_input("0"); st.rerun()
-            if c2.button(".", key="calc_.", use_container_width=True):
+            if c2.button(".", key="calc_.", width='stretch'):
                 handle_calculator_input("."); st.rerun()
-            if c3.button("Del", key="calc_delete", use_container_width=True):
+            if c3.button("Del", key="calc_delete", width='stretch'):
                 handle_calculator_input("delete"); st.rerun()
 
-        if st.button("Enter", key="calc_enter", use_container_width=True, type="primary"):
+        if st.button("Enter", key="calc_enter", width='stretch', type="primary"):
             handle_calculator_input("enter")
             st.rerun()
 
     with col3:
         with st.container(height=500, border=True):
             st.markdown("### Payment Type")
-            st.button("Credit", key="credit", use_container_width=True)
-            st.button("Cash", key="cash", use_container_width=True)
+            st.button("Credit", key="credit", width='stretch')
+            st.button("Cash", key="cash", width='stretch')
 
             st.markdown("---")
             st.markdown("### Split Evenly")
@@ -229,15 +239,16 @@ def show_checkout_page():
 
             st.markdown("---")
 
-        if st.button("Settle", key="settle", use_container_width=True, type="primary"):
+        if st.button("Settle", key="settle", width='stretch', type="primary"):
             if settle_order(list(orders.keys()), balance_due):
+                clear_live_cart_data()
                 st.session_state.amount_tendered = 0
                 st.session_state.current_input = ""
                 st.session_state.split_count = 1
                 st.success("Order settled!")
                 st.switch_page("pages/10_Order.py")
 
-        if st.button("Print Receipt", key="receipt", use_container_width=True):
+        if st.button("Print Receipt", key="receipt", width='stretch'):
             if print_receipt(orders, subtotal, tax_amount):
                 st.success("Printing...")
 

@@ -30,6 +30,39 @@ if 'pending_sub_modifier' not in st.session_state:
 if 'reopen_main_dialog' not in st.session_state:
     st.session_state.reopen_main_dialog = False
 
+# --- Database Sync Logic for CFD ---
+
+def sync_live_cart():
+    """
+    Flushes the Live_Cart table and inserts the current session's cart items 
+    so the Customer Facing Display (CFD) can read it in real-time.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Flush the table for the new state
+        cursor.execute("DELETE FROM Live_Cart")
+        
+        # Insert current cart items
+        for item in st.session_state.cart:
+            mod_text = ", ".join([m['description'] for m in item['modifiers']]) if item['modifiers'] else ""
+            cursor.execute('''
+                INSERT INTO Live_Cart (product_name, modifiers_text, quantity, unit_price, total_price)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                item['product_name'], 
+                mod_text, 
+                item['quantity'], 
+                item['price'], 
+                item['price'] * item['quantity']
+            ))
+        
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error syncing to CFD: {e}")
+    finally:
+        conn.close()
+
 def get_category():
     """Get all categories"""
     conn = get_db_connection()
@@ -126,6 +159,7 @@ def add_to_cart(product_id, product_name, price, modifiers):
         'modifiers': sorted_modifiers,
         'quantity': 1
     })
+    sync_live_cart() # Update the shared database table
 
 def update_quantity(index, delta):
     """Update quantity of cart item"""
@@ -133,6 +167,7 @@ def update_quantity(index, delta):
         st.session_state.cart[index]['quantity'] += delta
         if st.session_state.cart[index]['quantity'] <= 0:
             st.session_state.cart.pop(index)
+    sync_live_cart() # Update the shared database table
 
 def calculate_subtotal():
     """Calculate cart subtotal"""
@@ -166,6 +201,8 @@ def create_order():
             ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
         
         conn.commit()
+        st.session_state.cart = [] # Clear internal cart
+        sync_live_cart() # Flush the CFD display table
         return True
     except Exception as e:
         conn.rollback()
