@@ -62,7 +62,7 @@ st.set_page_config(
 
 load_css()
 
-st.subheader("Assign Products to Category")
+# st.subheader("Assign Products to Category")
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 col1, col2, col3 = st.columns([2, 2, 2])
