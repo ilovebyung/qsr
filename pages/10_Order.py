@@ -206,7 +206,8 @@ def show_modifier_dialog():
                 else:
                     # Selectbox — one choice from Modifier_Type_Item
                     type_items = get_modifier_type_items(mod_type)
-                    options    = ["None"] + type_items
+                    # options    = ["None"] + type_items
+                    options    = type_items
                     st.selectbox(
                         f"{modifier['description']}{mod_price}",
                         options,
