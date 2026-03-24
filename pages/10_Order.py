@@ -158,6 +158,8 @@ def create_order():
             ''', (order_id, item['product_id'], modifier_ids, item['quantity']))
         conn.commit()
         st.session_state.cart = []
+        st.session_state.provided_name = ''
+        st.session_state.note = ''
         sync_live_cart()
         return True
     except Exception as e:
@@ -308,8 +310,7 @@ def show_order_page():
         checkout_disabled = len(st.session_state.cart) == 0
         if st.button("Checkout", type="primary", use_container_width=True, disabled=checkout_disabled):
             if create_order():
-                st.success("Order created successfully!")
-                st.session_state.cart = []
+                st.success("Order created!")
                 st.switch_page("pages/12_Checkout.py")
 
     # Right column – Menu

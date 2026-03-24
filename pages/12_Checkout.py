@@ -42,7 +42,7 @@ def settle_order(order_ids, total):
     finally:
         conn.close()
 
-def set_dummy_price():
+def set_dummy_price(new_price=0):
     """Update the price of the 'dummy' product with the current input value."""
     if not st.session_state.current_input:
         st.warning("Please enter a price first using the number pad.")
@@ -68,6 +68,24 @@ def set_dummy_price():
         return True
     except Exception as e:
         st.error(f"Error setting dummy price: {e}")
+        return False
+    finally:
+        conn.close()
+
+def clear_dummy_price():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE Product
+            SET price = 0
+            WHERE description = 'dummy'
+        """)
+        conn.commit()
+        st.success(f"Dummy price cleared.")
+        return True
+    except Exception as e:
+        st.error(f"Error clearing dummy price: {e}")
         return False
     finally:
         conn.close()
@@ -150,6 +168,7 @@ def show_checkout_page():
                 orders[order_id].append({
                     'order_id': order_id,
                     'description': row['product_description'],
+                    'note': row['note'],
                     'quantity': row['product_quantity'],
                     'base_price': row['product_price'],
                     'modifiers': modifiers,
@@ -183,6 +202,7 @@ def show_checkout_page():
 
                         # Show "Set Dummy Price" button inline under the dummy item
                         if item['is_dummy']:
+                            st.write(f"**{item['note']}**")
                             if st.button(
                                 "💲 Set Dummy Price",
                                 key=f"set_dummy_{order_id}_{idx}",
@@ -282,6 +302,7 @@ def show_checkout_page():
         if st.button("Settle", key="settle", width='stretch', type="primary"):
             if settle_order(list(orders.keys()), balance_due):
                 clear_live_cart_data()
+                clear_dummy_price()  # Reset dummy price to 0  
                 st.session_state.amount_tendered = 0
                 st.session_state.current_input = ""
                 st.session_state.split_count = 1
